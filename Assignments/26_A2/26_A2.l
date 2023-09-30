@@ -61,7 +61,7 @@ WHITESPACE  [ \s\t\n]
 {PUNCTUATOR}            {printf("<PUNCTUATOR, %s>\n", yytext);}
 {COMMENT}               /* ignore comments */
 {WHITESPACE}            /* ignore whitespace */
-.                       { printf("Invalid character: %s\n", yytext); }
+.                       { printf("<INVALID TOKEN, %s>\n", yytext); return -1;}
 %%
 
 int yywrap() {
