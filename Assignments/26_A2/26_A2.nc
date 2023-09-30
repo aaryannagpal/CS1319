@@ -1,15 +1,42 @@
-char else for if int return void asert
+int arr[10]; // Sorted array to search
+/*
+A recursive binary search function. It returns location of x
+in given array arr[l..r] is present, otherwise -1
+*/
 
-_ a b c d e f g h i j k l m
-n o p q r s t u v w x y z
-A B C D E F G H I J K L M
-N O P Q R S T U V W X Y Z
-
-0 1 2 3 4 5 6 7 8 9
-
-_a _b _c _d _e _f _g _h _i _j _k _l _m
-_n _o _p _q _r _s _t _u _v _w _x _y _z
-_A _B _C _D _E _F _G _H _I _J _K _L _M
-_N _O _P _Q _R _S _T _U _V _W _X _Y _Z
-
-_0 _1 _2 _3 _4 _5 _6 _7 _8 _9
+int binarySearch(int l, int r, int x)
+{
+    if (r >= l)
+    {
+        int mid = l + (r - l) / 2;
+        // If the element is present at the middle itself
+        if (arr[mid] == x)
+            return mid;
+        // If element is smaller than mid, then it can only be present in left subarray
+        if (arr[mid] > x)
+            return binarySearch(l, mid - 1, x);
+        // Else the element can only be present in right subarray
+        return binarySearch(mid + 1, r, x);
+    }
+    // We reach here when element is not present in array
+    return -1;
+}
+int main()
+{
+    int n = 5; // Number of elements
+    arr[0] = 2;
+    arr[1] = 3;
+    arr[2] = 4;
+    arr[3] = 10;
+    arr[4] = 40;
+    int x = 10; // Key to search
+    int result = binarySearch(0, n - 1, x);
+    if (result == -1)
+        printStr("Element is not present in array");
+    else
+    {
+        printStr("Element is present at index ");
+        printInt(result);
+    }
+    return 0;
+}

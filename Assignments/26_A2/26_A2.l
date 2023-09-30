@@ -38,7 +38,7 @@ STRING_LITERAL     ([\"])({S_CHAR_SEQUENCE})([\"])
 PUNCTUATOR (\[|\]|\(|\)|\{|\}|&|\*|\+|-|\/|%|!|\?|<|>|<=|>=|==|!=|&&|\|\||=|->|\,|;|\:)
 
 SINGLE_LINE_COMMENT    (\/\/)([^\n])*
-MULTI_LINE_COMMENT     (\/\)([^\]|\[^\/])(\*\/)
+MULTI_LINE_COMMENT     (\/\*)([^\*]|\*[^\/])*(\*\/)
 
 COMMENT             ({MULTI_LINE_COMMENT})|({SINGLE_LINE_COMMENT})
 
@@ -59,10 +59,8 @@ WHITESPACE  [ \s\t\n]
 
 {STRING_LITERAL}        {printf("<STRING LITERAL, %s>\n", yytext);}
 {PUNCTUATOR}            {printf("<PUNCTUATOR, %s>\n", yytext);}
-{COMMENT}               {printf("<COMMENT, %s>\n", yytext);}
+{COMMENT}               /* ignore comments */
 {WHITESPACE}            /* ignore whitespace */
-
-.                       {printf("%s\n", yytext);}
 %%
 
 int yywrap() {
