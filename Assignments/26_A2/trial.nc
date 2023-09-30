@@ -1,12 +1,28 @@
 int main() {
-int x = 2;
-int y = 3;
+
+int x = --2;
+x < 0 ? 4 : 5; 
+
+char a = 'a';
+char b = 'bcd';
+
+string s = "Hello World!";
+int b -> 1;
+
+int y = 30;
 int z;
 z = x + y;
 printInt(x);
 printStr("+");
 printInt(y);
-printStr(" = ");
+printStr(" = "); 
 printInt(z);
-return 0;
+printStr("Is this it?\n");
+return 0; // This is a comment
+
+
+/* This is a test for
+a multi-line comment
+this is a test
+*/
 }

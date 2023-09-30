@@ -11,7 +11,36 @@ INT         "int"
 RETURN      "return"
 VOID        "void"
 
-IDENTIFIER  [a-zA-Z_][a-zA-Z_0-9]*
+DIGIT       [0-9]
+NON_DIGIT   [a-zA-Z_]
+
+IDENTIFIER  ({NON_DIGIT})({DIGIT}|{NON_DIGIT})*
+
+SIGN                [+-]
+NONZERO_DIGIT       [1-9]
+ZERO_DIGIT          [0]
+
+INTEGER_CONSTANT    ({ZERO_DIGIT})|({SIGN}?{NONZERO_DIGIT}{DIGIT}*)
+
+ESCAPE_SEQUENCE     [\'\"?\\abfnrtv]
+C_CHAR              ({ESCAPE_SEQUENCE})|([^\'\\\n])
+CHAR_SEQUENCE       {C_CHAR}+
+
+CHARACTER_CONSTANT  ([\'])({CHAR_SEQUENCE})([\'])
+
+CONSTANT            ({INTEGER_CONSTANT})|({CHARACTER_CONSTANT})
+
+S_CHAR              ({ESCAPE_SEQUENCE})|([^\"\\\n])
+S_CHAR_SEQUENCE     {S_CHAR}+
+
+STRING_LITERAL     ([\"])({S_CHAR_SEQUENCE})([\"])
+
+PUNCTUATOR (\[|\]|\(|\)|\{|\}|&|\*|\+|-|\/|%|!|\?|<|>|<=|>=|==|!=|&&|\|\||=|->|\,|;|\:)
+
+SINGLE_LINE_COMMENT    (\/\/)([^\n])*
+MULTI_LINE_COMMENT     (\/\)([^\]|\[^\/])(\*\/)
+
+COMMENT             ({MULTI_LINE_COMMENT})|({SINGLE_LINE_COMMENT})
 
 WHITESPACE  [ \s\t\n]
 
@@ -24,13 +53,16 @@ WHITESPACE  [ \s\t\n]
 {RETURN}    {printf("<KEYWORD, %s>\n", yytext);}
 {VOID}      {printf("<KEYWORD, %s>\n", yytext);}
 
-{IDENTIFIER}    {printf("<IDENTIFIER, %s>\n", yytext);}
+{IDENTIFIER}            {printf("<IDENTIFIER, %s>\n", yytext);}
 
+{CONSTANT}              {printf("<CONSTANT, %s>\n", yytext);}
 
+{STRING_LITERAL}        {printf("<STRING LITERAL, %s>\n", yytext);}
+{PUNCTUATOR}            {printf("<PUNCTUATOR, %s>\n", yytext);}
+{COMMENT}               {printf("<COMMENT, %s>\n", yytext);}
+{WHITESPACE}            /* ignore whitespace */
 
-{WHITESPACE}    {/* ignore whitespace */}
-.               {printf("%s\n", yytext);}
-
+.                       {printf("%s\n", yytext);}
 %%
 
 int yywrap() {
