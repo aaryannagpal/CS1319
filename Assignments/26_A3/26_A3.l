@@ -1,5 +1,5 @@
 %{
-/* nanoC Declarations */
+    #include "26_A3.tab.h"
 %}
 
 /* Regular Expression Definitions */
@@ -45,20 +45,22 @@ COMMENT             ({MULTI_LINE_COMMENT})|({SINGLE_LINE_COMMENT})
 WHITESPACE  [ \s\t\n]
 
 %%
-{CHAR}      {printf("<KEYWORD, %s>\n", yytext);}
-{ELSE}      {printf("<KEYWORD, %s>\n", yytext);}
-{FOR}       {printf("<KEYWORD, %s>\n", yytext);}
-{IF}        {printf("<KEYWORD, %s>\n", yytext);}
-{INT}       {printf("<KEYWORD, %s>\n", yytext);}
-{RETURN}    {printf("<KEYWORD, %s>\n", yytext);}
-{VOID}      {printf("<KEYWORD, %s>\n", yytext);}
+{CHAR}      {return CHAR;}
+{ELSE}      {return ELSE;}
+{FOR}       {return FOR;}
+{IF}        {return IF;}
+{INT}       {return INT;}
+{RETURN}    {return RETURN;}
+{VOID}      {return VOID;}
 
-{IDENTIFIER}            {printf("<IDENTIFIER, %s>\n", yytext);}
+{IDENTIFIER}            {return IDENTIFIER;}
 
-{CONSTANT}              {printf("<CONSTANT, %s>\n", yytext);}
+{CHARACTER_CONSTANT}    {return CHARACTER_CONSTANT;}
+{INTEGER_CONSTANT}      {return INTEGER_CONSTANT;}
 
-{STRING_LITERAL}        {printf("<STRING LITERAL, %s>\n", yytext);}
-{PUNCTUATOR}            {printf("<PUNCTUATOR, %s>\n", yytext);}
+{STRING_LITERAL}        {return STRING_LITERAL;}
+{PUNCTUATOR}            {return yytext[0];}
+
 {COMMENT}               /* ignore comments */
 {WHITESPACE}            /* ignore whitespace */
 .                       { printf("<INVALID TOKEN, %s>\n", yytext); return -1;}
