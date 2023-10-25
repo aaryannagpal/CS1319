@@ -33,7 +33,7 @@
 %token LOGICALAND // &&
 %token LOGICALOR // ||
 
-%token IDENTIFIER
+%token <name> IDENTIFIER
 %token <name> STRING_LITERAL
 %token <name> CHARACTER_CONSTANT
 %token <val>  INTEGER_CONSTANT
@@ -240,8 +240,13 @@ jump_statement:
     ;
     
 translation_unit:
-    function_definition {printf("translation-unit\n");}
-    | declaration       {printf("translation-unit\n");}
+    external_declaration                        {printf("translation-unit\n");}
+    | translation_unit external_declaration     {printf("translation-unit\n");}
+    ;
+
+external_declaration:
+    declaration             {printf("external-declaration\n");}
+    | function_definition   {printf("external-declaration\n");}
     ;
 
 function_definition:
