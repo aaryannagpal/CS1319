@@ -20,7 +20,7 @@ SIGN                [+-]
 NONZERO_DIGIT       [1-9]
 ZERO_DIGIT          [0]
 
-INTEGER_CONSTANT    ({ZERO_DIGIT})|({SIGN}?{NONZERO_DIGIT}{DIGIT}*)
+INTEGER_CONSTANT    {ZERO_DIGIT}|{NONZERO_DIGIT}{DIGIT}*
 
 ESCAPE_SEQUENCE     [\'\"?\\abfnrtv]
 C_CHAR              ({ESCAPE_SEQUENCE})|([^\'\\\n])
@@ -35,7 +35,7 @@ S_CHAR_SEQUENCE     {S_CHAR}*
 
 STRING_LITERAL     ([\"])({S_CHAR_SEQUENCE})([\"])
 
-PUNCTUATOR (\[|\]|\(|\)|\{|\}|&|\*|\+|-|\/|%|!|\?|<|>|<=|>=|==|!=|&&|\|\||=|->|\,|;|\:)
+PUNCTUATOR (\[|\]|\(|\)|\{|\}|&|\*|\+|-|\/|%|!|\?|<|>|=|\,|;|\:)
 
 SINGLE_LINE_COMMENT    (\/\/)([^\n])*
 MULTI_LINE_COMMENT     (\/\*)([^\*]|\*[^\/])*(\*\/)
@@ -59,7 +59,17 @@ WHITESPACE  [ \s\t\n]
 {INTEGER_CONSTANT}      {return INTEGER_CONSTANT;}
 
 {STRING_LITERAL}        {return STRING_LITERAL;}
+
+"&&"                    {return LOGICALAND;}
+"||"                    {return LOGICALOR;}
+"<="                    {return LESSTHANEQ;}
+">="                    {return GREATERTHANEQ;}
+"=="                    {return EQ;}
+"!="                    {return NEQ;}
+"->"                    {return ARROW;}
+
 {PUNCTUATOR}            {return yytext[0];}
+
 
 {COMMENT}               /* ignore comments */
 {WHITESPACE}            /* ignore whitespace */
