@@ -3,6 +3,11 @@ build:
 	flex -o lex.yy.c 26_A3.l
 	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -lfl -Werror
 
+build_2:
+	bison -d 26_A3.y
+	flex -o lex.yy.c 26_A3.l
+	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -ll -Werror
+
 build-test:
 	bison -d 26_A3.y
 	flex -o lex.yy.c 26_A3.l
