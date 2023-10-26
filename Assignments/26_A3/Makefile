@@ -8,11 +8,21 @@ build_2:
 	flex -o lex.yy.c 26_A3.l
 	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -ll -Werror
 
-build-test:
+test:
 	bison -d 26_A3.y
 	flex -o lex.yy.c 26_A3.l
 	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -lfl -Werror
 	./parser < 26_A3.nc > test.out
+
+test-2:
+	bison -d 26_A3.y
+	flex -o lex.yy.c 26_A3.l
+	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -ll -Werror
+
+	./parser < test_cases/array_runtime_error.nc > output/array_runtime_error.output
+	./parser < test_cases/factorial.nc > output/factorial.output
+	./parser < test_cases/factorial_recursive.nc > output/factorial_recursive.output
+	./parser < test_cases/syntax_error.nc > output/syntax_error.output
 
 test-all:
 	bison -d 26_A3.y
@@ -23,10 +33,13 @@ test-all:
 	./parser < sample_output_A3/error_test.nc > output/error_test.output
 	python3 test-cases.py > output/result.txt
 
-clean-test-all:
+clean-all-test:
 	rm -f lex.yy.c 26_A3.tab.c 26_A3.tab.h parser
 	rm -f output/bubble_sort.output output/corecursive_fibonacci.output output/error_test.output
+	rm -f output/array_runtime_error.output output/factorial.output output/factorial_recursive.output
+	rm -f output/nested_function.output output/syntax_error.output
 	rm -f output/result.txt
+	rm -f test.out
 
 clean-test:
 	rm -f lex.yy.c 26_A3.tab.c 26_A3.tab.h parser
