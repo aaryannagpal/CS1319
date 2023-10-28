@@ -1,21 +1,21 @@
 build:
-	bison -d 26_A3.y
+	bison 26_A3.y --defines=26_A3.tab.h -o 26_A3.tab.c
 	flex -o lex.yy.c 26_A3.l
 	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -lfl -Werror
 
 build_2:
-	bison -d 26_A3.y
+	bison 26_A3.y --defines=26_A3.tab.h -o 26_A3.tab.c
 	flex -o lex.yy.c 26_A3.l
 	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -ll -Werror
 
 test:
-	bison -d 26_A3.y
+	bison 26_A3.y --defines=26_A3.tab.h -o 26_A3.tab.c
 	flex -o lex.yy.c 26_A3.l
 	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -lfl -Werror
 	./parser < 26_A3.nc > test.out
 
 test-2:
-	bison -d 26_A3.y
+	bison 26_A3.y --defines=26_A3.tab.h -o 26_A3.tab.c
 	flex -o lex.yy.c 26_A3.l
 	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -ll -Werror
 
@@ -25,7 +25,7 @@ test-2:
 	./parser < test_cases/syntax_error.nc > output/syntax_error.output
 
 test-all:
-	bison -d 26_A3.y
+	bison 26_A3.y --defines=26_A3.tab.h -o 26_A3.tab.c
 	flex -o lex.yy.c 26_A3.l
 	gcc -o parser lex.yy.c 26_A3.tab.c 26_A3.c -lfl -Werror
 	./parser < sample_output_A3/bubble_sort.nc > output/bubble_sort.output
