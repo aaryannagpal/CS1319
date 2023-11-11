@@ -23,14 +23,14 @@ ZERO_DIGIT          [0]
 INTEGER_CONSTANT    {ZERO_DIGIT}|{NONZERO_DIGIT}{DIGIT}*
 
 ESCAPE_SEQUENCE     [\'\"?\\abfnrtv]
-C_CHAR              ({ESCAPE_SEQUENCE})|([^\'\\\n])
-CHAR_SEQUENCE       {C_CHAR}*
+C_CHAR              (\\{ESCAPE_SEQUENCE})|([^\'\\\n])
+CHAR_SEQUENCE       {C_CHAR}+
 
 CHARACTER_CONSTANT  ([\'])({CHAR_SEQUENCE})([\'])
 
 CONSTANT            ({INTEGER_CONSTANT})|({CHARACTER_CONSTANT})
 
-S_CHAR              ({ESCAPE_SEQUENCE})|([^\"\\\n])
+S_CHAR              (\\{ESCAPE_SEQUENCE})|([^\"\\\n])
 S_CHAR_SEQUENCE     {S_CHAR}*
 
 STRING_LITERAL     ([\"])({S_CHAR_SEQUENCE})([\"])
@@ -73,7 +73,7 @@ WHITESPACE  [ \s\t\n]
 
 {COMMENT}               /* ignore comments */
 {WHITESPACE}            /* ignore whitespace */
-.                       { printf("<INVALID TOKEN, %s>\n", yytext); return -1;}
+.                       {return -1;}
 %%
 
 int yywrap() {
