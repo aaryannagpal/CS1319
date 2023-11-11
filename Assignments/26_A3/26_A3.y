@@ -256,5 +256,5 @@ function_definition:
 
 
 void yyerror(char *s) {
-    printf("Error: %s on '%s'\n", s, yytext);
+    printf("Error: %s on '%s'", s, yytext);
 }
