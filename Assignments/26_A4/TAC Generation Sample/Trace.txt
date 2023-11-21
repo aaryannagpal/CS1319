@@ -1,0 +1,192 @@
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S
+E -> num
+S -> id = E
+L -> S
+E -> num
+S -> id = E
+L -> L S
+E -> id
+E -> id
+E -> E + E
+S -> id = E
+L -> L S
+E -> id
+E -> num
+E -> E * E
+S -> id = E
+L -> L S

@@ -1,5 +1,6 @@
 %{
-    #include "26_A3.tab.h"
+    #include <math.h>
+    #include "26_A4.tab.h"
 %}
 
 /* Regular Expression Definitions */
@@ -53,10 +54,16 @@ WHITESPACE  [ \s\t\n]
 {RETURN}    {return RETURN;}
 {VOID}      {return VOID;}
 
-{IDENTIFIER}            {return IDENTIFIER;}
+{IDENTIFIER}            {
+                            yylval.symp = symlook(yytext);
+                            return IDENTIFIER;
+                        }
 
 {CHARACTER_CONSTANT}    {return CHARACTER_CONSTANT;}
-{INTEGER_CONSTANT}      {return INTEGER_CONSTANT;}
+{INTEGER_CONSTANT}      {
+                            yylval.intval = atoi(yytext);
+                            return INTEGER_CONSTANT;
+                        }
 
 {STRING_LITERAL}        {return STRING_LITERAL;}
 

@@ -10,6 +10,7 @@
 %union {
     int val;
     char *name;
+    symb;
 };
 
 /*start symbol*/
