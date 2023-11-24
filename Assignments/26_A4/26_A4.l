@@ -1,6 +1,10 @@
 %{
+    #include <stdio.h>
+    #include <stdlib.h>
     #include <math.h>
+    #include "26_A4_translator.h"
     #include "26_A4.tab.h"
+    #include <string.h>
 %}
 
 /* Regular Expression Definitions */
@@ -55,17 +59,23 @@ WHITESPACE  [ \s\t\n]
 {VOID}      {return VOID;}
 
 {IDENTIFIER}            {
-                            yylval.symp = symlook(yytext);
+                            yylval.symp = symlook(current_table, yytext);
                             return IDENTIFIER;
                         }
 
-{CHARACTER_CONSTANT}    {return CHARACTER_CONSTANT;}
+{CHARACTER_CONSTANT}    {
+                            yylval.charval = yytext;
+                            return CHARACTER_CONSTANT;
+                        }
 {INTEGER_CONSTANT}      {
                             yylval.intval = atoi(yytext);
                             return INTEGER_CONSTANT;
                         }
 
-{STRING_LITERAL}        {return STRING_LITERAL;}
+{STRING_LITERAL}        {
+                            yylval.charval = yytext;
+                            return STRING_LITERAL;
+                        }
 
 "&&"                    {return LOGICALAND;}
 "||"                    {return LOGICALOR;}
