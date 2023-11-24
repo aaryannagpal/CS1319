@@ -1,16 +1,19 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
+    #include "26_A4_translator.h"
+
     extern int yylex();
+
     void yyerror(char *s);
     extern char *yytext;
-
+    
 %}
 
 %union {
-    int val;
-    char *name;
-    symb;
+    int intval;
+    char *charval;
+    symbol *symp;
 };
 
 /*start symbol*/
