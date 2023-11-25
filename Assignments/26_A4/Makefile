@@ -10,6 +10,9 @@ build: parser
 test: parser
 	./parser < 26_A4.nc > test.out
 
+open: parser
+	./parser < 26_A4.nc
+
 clean: 
 	rm -f lex.yy.c 26_A4.tab.c 26_A4.tab.h parser
 	rm -f test.out
