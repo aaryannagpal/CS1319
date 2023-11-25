@@ -5,6 +5,13 @@
 #define size_of_char 1
 #define size_of_pointer 4
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define DSTACK 100
+
 extern  char* yytext;
 extern  int yyparse();
 
@@ -40,7 +47,35 @@ typedef struct sym {
 extern symbol *global_table;
 extern symbol *current_table;
 
-symbol *symlook(symbol* table, char *name);
+symbol *symlook(symbol *table, char *name);
+void print_symboltable(symbol *table);
+symbol *create_symboltable();
+symbol *update_symboltable(symbol *table, char *name, enumtype type, void *value, int size);
+symbol *gentemp();
+
+typedef struct data_type{
+	enumtype type;
+	int size;
+}data_type;
+
+typedef struct {
+    data_type items[DSTACK];
+    int top;
+} DataTypeStack;
+
+void push(DataTypeStack *s, data_type item);
+data_type pop(DataTypeStack *s);
+
+extern DataTypeStack dTypeStack;
+extern data_type intType ;
+extern data_type charType;
+extern data_type voidType;
+extern data_type ptrType ;
+typedef struct exp{
+	symbol *loc;
+	bool isPointer;
+	bool isBoolean;
+}Expression;
 
 /* TAC generation support */
 // symbol *gentemp();
