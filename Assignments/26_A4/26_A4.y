@@ -14,6 +14,9 @@
     int intval;
     char *charval;
     symbol *symp;
+    data_type *dtype;
+
+    Expression *expr;
 };
 
 /*start symbol*/
@@ -37,11 +40,39 @@
 %token LOGICALAND // &&
 %token LOGICALOR // ||
 
-%token <name> IDENTIFIER
-%token <name> STRING_LITERAL
-%token <name> CHARACTER_CONSTANT
-%token <val>  INTEGER_CONSTANT
+%token <symp> IDENTIFIER
+%token <charval> STRING_LITERAL
+%token <charval> CHARACTER_CONSTANT
+%token <intval>  INTEGER_CONSTANT
+
+%type <dtype> type_specifier
+
+%type <expr> 
+    expression
+	primary_expression 
+	postfix_expression
+	unary_expression
+	multiplicative_expression
+	additive_expression
+	relational_expression
+	equality_expression
+	logical_and_expression
+	logical_or_expression
+	conditional_expression
+	assignment_expression
+	expression_statement
+
+%type <symp> 
+    declarator
+    direct_declarator
+    identifier_opt
+    init_declarator
+    initializer
 %%
+
+
+
+
 /*expressions*/
 
 primary_expression:
@@ -136,22 +167,45 @@ expression:
 /*declarations*/
 
 declaration:
-    type_specifier init_declarator ';' {printf("declaration\n");}
+    type_specifier init_declarator ';'  {   
+                                            printf("declaration - current_table is null\n");
+                                        }
     ;
 
 init_declarator:
-    declarator                      {printf("init-declarator\n");}
+    declarator                      {
+                                        if (current_table == global_table){
+                                            if($1->type == TYPE_INT || $1->type == TYPE_CHAR || $1->type == TYPE_PTR){
+                                                $1->value = 0;
+                                                update_symboltable(current_table, $1->name, $1->type, $1->value, $1->size);
+                                                printf("init-declarator - value initialized\n");
+                                                print_symboltable(current_table);
+                                            }
+                                        }
+                                    }
     | declarator '=' initializer    {printf("init-declarator\n");}
     ;
 
 type_specifier:
-    VOID    {printf("type-specifier\n");}
-    | CHAR  {printf("type-specifier\n");}
-    | INT   {printf("type-specifier\n");}
+    VOID    {
+                push(&dTypeStack, voidType);
+                printf("type-specifier VOID - type %d and size %d\n", voidType.type, voidType.size);
+            }
+    | CHAR  {
+                push(&dTypeStack, charType);
+                printf("type-specifier CHAR - type %d and size %d\n", charType.type, charType.size);
+            }
+    | INT   {
+                push(&dTypeStack, intType);
+                printf("type-specifier INT- type %d and size %d\n", intType.type, intType.size);
+            }
     ;
 
 declarator:
-    pointer_opt direct_declarator   {printf("declarator\n");}
+    pointer_opt direct_declarator   {
+                                        $$ = $2;
+                                        printf("declarator - %d\n", $$->type);
+                                    }
     ;
 
 pointer_opt:
@@ -160,7 +214,14 @@ pointer_opt:
     ;
 
 direct_declarator:
-    IDENTIFIER                              {printf("direct-declarator\n");}
+    IDENTIFIER                              {   
+                                                $$ = (symbol *)malloc(sizeof(symbol));
+                                                data_type dType = pop(&dTypeStack);
+                                                printf("Checking for: %s\n", $1->name);
+                                                $1 = update_symboltable(current_table, $1->name, dType.type, 0, dType.size);
+                                                $$ = $1;
+                                                printf("direct-declarator - %s\n", $$->name);
+                                            }
     | IDENTIFIER '['INTEGER_CONSTANT']'     {printf("direct-declarator\n");}
     | IDENTIFIER '('parameter_list_opt')'   {printf("direct-declarator\n");}
     ;
@@ -189,7 +250,10 @@ identifier_opt:
     ;
 
 initializer:
-    assignment_expression   {printf("initializer\n");}
+    assignment_expression   {   
+                                $$ = $1->loc;
+                                printf("initializer - loc given\n");
+                            }
     ;
 
 /*statements*/
