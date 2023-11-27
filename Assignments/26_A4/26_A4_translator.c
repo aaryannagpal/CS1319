@@ -29,49 +29,46 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
     while(temp != NULL){
         printf("Comparing %s\n", temp->name);
         if(strcmp(temp->name, name) == 0){
-            temp->type = type;
-
-            if (temp->value != NULL){
-                printf("Value already present\n");
-                switch(type){
-                    case TYPE_INT:
-                        temp->value = (void*)value;
-                        // *(int*)temp->value = atoi(value);
-                        break;
-                    case TYPE_CHAR:
-                        temp->value = (void*)malloc(sizeof(char));
-                        *(char*)temp->value = value[1];
-                        break;
-                    // case TYPE_PTR:
-                    //     temp->value = (void*)malloc(sizeof(void*));
-                    //     *(void**)temp->value = NULL;
-                    //     break;
-                    // case TYPE_VOID:
-                    //     temp->value = NULL;
-                    //     break;
-                    // case TYPE_VOID_PTR:
-                    //     temp->value = (void*)malloc(sizeof(void*));
-                    //     *(void**)temp->value = NULL;
-                    //     break;
-                    // case TYPE_INT_PTR:
-                    //     temp->value = (void*)malloc(sizeof(int*));
-                    //     *(int**)temp->value = NULL;
-                    //     break;
-                    // case TYPE_CHAR_PTR:
-                    //     temp->value = (void*)malloc(sizeof(char*));
-                    //     *(char**)temp->value = NULL;
-                    //     break;
-                }
-            }
             printf("Found symbol table entry for %s\n", temp->name);
+            temp->type = type;
+            printf("Value already present\n");
+            switch(type){
+                case TYPE_INT:
+                    printf("Int type\n");
+                    temp->value = value;
+                    // *(int*)temp->value = atoi(value);
+                    break;
+                case TYPE_CHAR:
+                    temp->value = value;
+                    break;
+                case TYPE_PTR:
+                    printf("Pointer type\n");
+                    temp->value = &value;
+                    break;
+                // case TYPE_VOID:
+                //     temp->value = NULL;
+                //     break;
+                // case TYPE_VOID_PTR:
+                //     temp->value = (void*)malloc(sizeof(void*));
+                //     *(void**)temp->value = NULL;
+                //     break;
+                // case TYPE_INT_PTR:
+                //     temp->value = (void*)malloc(sizeof(int*));
+                //     *(int**)temp->value = NULL;
+                //     break;
+                // case TYPE_CHAR_PTR:
+                //     temp->value = (void*)malloc(sizeof(char*));
+                //     *(char**)temp->value = NULL;
+                //     break;
+            }
 
             printf("%d\n", temp->type);
 
-            temp->value = value;
+            // temp->value = value;
             temp->size = size;
             
             // table = temp;
-            print_symboltable(table);
+            // print_symboltable(table);
             return temp;
         }
         temp = temp->next;
@@ -113,7 +110,7 @@ symbol *symlook(symbol *table, char *name){
 
     symb->next = new;
     // table->next = new;
-    print_symboltable(table);
+    // print_symboltable(table);
     // printf("%p\n", table->next);
     // printf("\n");
     // return new;
@@ -129,16 +126,16 @@ void print_symboltable(symbol *table){//, char *name){
 
     // printf("Name: %s\n", sym->name);
     printf("======================================================================================\n");
-    printf("Current\t\t\tName\tType\tValue\tSize\tOffset\tNested Table\tNext\n");
+    printf("Current\t\t\tName\t\tType\t\tValue\t\tSize\tOffset\tNested Table\tNext\n");
     printf("======================================================================================\n");
     while(sym != NULL){
         printf("%p\t\t", sym);
-        printf("%s\t", sym->name);
+        printf("%s\t\t", sym->name);
         switch(sym->type){
             case TYPE_INT:
-                printf("int\t\t");
+                printf("int\t\t\t\t");
                 if (sym->value == NULL){
-                    printf("NULL\t\t");
+                    printf("NULL\t\t\t\t");
                 }
                 else{
                     printf("%d\t\t\t", atoi(sym->value));
@@ -147,7 +144,7 @@ void print_symboltable(symbol *table){//, char *name){
                 break;
             case TYPE_CHAR:
                 // printf("HEKKO\t");
-                printf("char\t");
+                printf("char\t\t\t");
                 if (sym->value == NULL){
                     printf("NULL\t\t");
                 }
@@ -238,6 +235,8 @@ void emit(opcodeType op, char *result, char *arg1, char *arg2){
         QuadArray[next_instr] = new;
         next_instr++;
         // printf("Quad emitted %s\n", result);
+        // print_quad_array();
+        // print_symboltable(current_table);
         return;
 }
 
