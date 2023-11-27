@@ -11,6 +11,8 @@
 #include <stdbool.h>
 
 #define DSTACK 100
+#define MAXQARRAY 10000
+#define MAXEXPLIST 100
 
 extern  char* yytext;
 extern  int yyparse();
@@ -21,6 +23,9 @@ extern  int yyparse();
 
 /* Symbol Table */
 typedef enum{
+	TYPE_VOID_PTR = -3,
+	TYPE_INT_PTR,
+	TYPE_CHAR_PTR,
 	TYPE_VOID,
 	TYPE_INT,
 	TYPE_CHAR,
@@ -50,7 +55,7 @@ extern symbol *current_table;
 symbol *symlook(symbol *table, char *name);
 void print_symboltable(symbol *table);
 symbol *create_symboltable();
-symbol *update_symboltable(symbol *table, char *name, enumtype type, void *value, int size);
+symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size);
 symbol *gentemp();
 
 typedef struct data_type{
@@ -73,8 +78,16 @@ extern data_type voidType;
 extern data_type ptrType ;
 typedef struct exp{
 	symbol *loc;
+	bool isArray;
 	bool isPointer;
 	bool isBoolean;
+
+	int trueList[MAXEXPLIST];
+	int falseList[MAXEXPLIST];
+
+	int nextList[MAXEXPLIST];
+
+
 }Expression;
 
 /* TAC generation support */
@@ -96,19 +109,37 @@ typedef struct exp{
 // 	char *s2); // Arg 1
 
 // /* Support for Lazy TAC generation through Quad array */
-// typedef enum {
-// 	PLUS = 1,
-// 	MINUS,
-// 	MULT,
-// 	DIV,
-// 	UNARYMINUS,
-// 	COPY,
-// } opcodeType;
+typedef enum {
+	ASSIGN = 1,
+	PLUS,
+	MINUS,
+	MULT,
+	DIV,
+	MOD,
 
-// typedef struct quad_tag {
-// 	opcodeType op;
-// 	char *result, *arg1, *arg2;
-// } quad;
+	
+	ADDR,
+	PTR_ASSIGN,
+	UPLUS,
+	UMINUS,
+	NOT,
+
+
+	PARAM,
+} opcodeType;
+
+typedef struct quad_tag {
+	opcodeType op;
+	char *result, *arg1, *arg2;
+} quad;
+
+extern quad *QuadArray[MAXQARRAY];
+
+void emit(opcodeType op, char *result, char *arg1, char *arg2);
+void print_quad_array();
+
+
+void copyArray(int *dest, int *src, int size);
 
 // quad *new_quad_binary(opcodeType op1, char *s1, char *s2, char *s3);
 
