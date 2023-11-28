@@ -61,10 +61,8 @@ WHITESPACE  [ \s\t\n]
 {VOID}      {return VOID;}
 
 {IDENTIFIER}            {
-                            printf("\n\nLexer adds\n\n");
-                            printf("Token: %s\n", yytext);
                             yylval.symp = symlook(current_table, yytext);
-                            printf("Token: %s\n", yylval.symp->name);
+                            printf("-->Token: %s\n", yylval.symp->name);
                             return IDENTIFIER;
                         }
 
