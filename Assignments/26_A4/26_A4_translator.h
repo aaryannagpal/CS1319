@@ -12,7 +12,7 @@
 
 #define DSTACK 100
 #define MAXQARRAY 10000
-#define MAXEXPLIST 100
+#define MAXLIST 100
 
 extern  char* yytext;
 extern  int yyparse();
@@ -29,19 +29,29 @@ typedef enum{
 	TYPE_VOID,
 	TYPE_INT,
 	TYPE_CHAR,
-	TYPE_PTR
+	TYPE_PTR,
 }enumtype;
 
+typedef enum{
+	NONE,
+	GLOBAL,
+	LOCAL,
+	PARAMETER,
+	FUNCTION	
+}enumcat;
 typedef struct sym {
 	char *name;
 	enumtype type;
 	void *value;
 	int size;
 	int offset;
+	enumcat category;	
 	// symboltable *nested_table;
 	struct sym *nested_table;
 	struct sym *next;   
 }symbol;
+
+// something for parameter list
 
 // typedef struct symtab {
 // 	char *name;
@@ -51,11 +61,13 @@ typedef struct sym {
 
 extern symbol *global_table;
 extern symbol *current_table;
+extern symbol *table_pointer;
+extern char *table_name;
 
 symbol *symlook(symbol *table, char *name);
 void print_symboltable(symbol *table);
 symbol *create_symboltable();
-symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size);
+symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category);
 symbol *gentemp();
 
 typedef struct data_type{
@@ -82,13 +94,14 @@ typedef struct exp{
 	bool isPointer;
 	bool isBoolean;
 
-	int trueList[MAXEXPLIST];
-	int falseList[MAXEXPLIST];
-
-	int nextList[MAXEXPLIST];
-
+	int trueList[MAXLIST];
+	int falseList[MAXLIST];
 
 }Expression;
+
+typedef struct stat{
+	int nextList[MAXLIST];
+}Statement;
 
 /* TAC generation support */
 // symbol *gentemp();
@@ -124,7 +137,8 @@ typedef enum {
 	UMINUS,
 	NOT,
 
-
+	FUNC,
+	FUNC_END,
 	PARAM,
 } opcodeType;
 
@@ -140,6 +154,8 @@ void print_quad_array();
 
 
 void copyArray(int *dest, int *src, int size);
+
+
 
 // quad *new_quad_binary(opcodeType op1, char *s1, char *s2, char *s3);
 
