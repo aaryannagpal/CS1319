@@ -13,6 +13,7 @@
 #define DSTACK 100
 #define MAXQARRAY 10000
 #define MAXLIST 100
+#define MAXTEMP 100
 
 extern  char* yytext;
 extern  int yyparse();
@@ -37,7 +38,8 @@ typedef enum{
 	GLOBAL,
 	LOCAL,
 	PARAMETER,
-	FUNCTION	
+	FUNCTION,
+	TEMP
 }enumcat;
 typedef struct sym {
 	char *name;
@@ -97,31 +99,15 @@ typedef struct exp{
 	int trueList[MAXLIST];
 	int falseList[MAXLIST];
 
+	int nextList[MAXLIST]; //only for Statements
+
 }Expression;
 
 typedef struct stat{
 	int nextList[MAXLIST];
 }Statement;
 
-/* TAC generation support */
-// symbol *gentemp();
 
-// void emit_binary(
-// 	char *s1,  // Result
-// 	char *s2,  // Arg 1
-// 	char c,    // Operator
-// 	char *s3); // Arg 2
-
-// void emit_unary(
-// 	char *s1, // Result
-// 	char *s2, // Arg 1
-// 	char c);  // Operator
-
-// void emit_copy(
-// 	char *s1,  // Result
-// 	char *s2); // Arg 1
-
-// /* Support for Lazy TAC generation through Quad array */
 typedef enum {
 	ASSIGN = 1,
 	PLUS,
@@ -136,6 +122,8 @@ typedef enum {
 	UPLUS,
 	UMINUS,
 	NOT,
+
+	GOTO,
 
 	FUNC,
 	FUNC_END,
@@ -154,8 +142,6 @@ void print_quad_array();
 
 
 void copyArray(int *dest, int *src, int size);
-
-
 
 // quad *new_quad_binary(opcodeType op1, char *s1, char *s2, char *s3);
 
