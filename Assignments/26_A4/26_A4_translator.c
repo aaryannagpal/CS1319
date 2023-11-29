@@ -28,7 +28,7 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
     printf("-->Updating symbol table entry for %s\n", name);
     printf("\n\n");
     while(temp != NULL){
-        // printf("Comparing %s\n", temp->name);
+        printf("==>Comparing %s\n", temp->name);
         if(strcmp(temp->name, name) == 0){
             printf("-->Found symbol table entry for %s\n", temp->name);
             temp->type = type;
@@ -70,11 +70,12 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
             temp->category = category;
             
             // table = temp;
-            // print_symboltable(table);
+            print_symboltable(table);
             return temp;
         }
         temp = temp->next;
     }
+    printf("-->Symbol table entry for %s not found.\n", name);
 }
 
 symbol *symlook(symbol *table, char *name){
@@ -94,13 +95,19 @@ symbol *symlook(symbol *table, char *name){
     while(symb->next != NULL){
         if(strcmp(symb->name, name) == 0){
             printf("-->Found symbol table entry for %s\n", name);
-            print_symboltable(symb);
+            // print_symboltable(symb);
             return symb;
         }
         symb = symb->next;
     }
+
+    if (strcmp(symb->name, name) == 0){
+        printf("-->Found symbol table entry for %s\n", name);
+        print_symboltable(symb);
+        return symb;
+    }
     printf("-->Symbol table entry for %s not found. Creating new entry\n", name);
-    // printf("%s\n", name);
+    printf("%s\n", name);
     symbol *new = (symbol *)malloc(sizeof(symbol));
     new->name = strdup(name);
     new->type = 0;
@@ -123,13 +130,13 @@ void print_symboltable(symbol *table){//, char *name){
 
     symbol *sym = table;
     if (table == global_table){
-        printf("\n\nName: ST.GLB \t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t Parent: NULL\n");
+        printf("\n\nName: ST.GLB\t\tParent: NULL\n");
     }
 
     // printf("Name: %s\n", sym->name);
-    printf("===================================================================================================================\n");
-    printf("Current\t\t\t\tName\t\tType\t\tValue\t\tSize\tOffset\tCategory\tNested Table\tNext\n");
-    printf("===================================================================================================================\n");
+    printf("=======================================================================================================================================\n");
+    printf("Current\t\t\t\tName\t\tType\t\tValue\t\tSize\tOffset\t\tCategory\tNested Table\t\t\t\tNext\n");
+    printf("=======================================================================================================================================\n");
     while(sym != NULL){
         printf("%p\t\t", sym);
         printf("%-10s\t", sym->name);
@@ -140,23 +147,23 @@ void print_symboltable(symbol *table){//, char *name){
                     printf("NULL\t\t");
                 }
                 else{
-                    printf("%-10d\t\t\t", atoi(sym->value));
+                    printf("%-10d\t", atoi(sym->value));
                 }
 
                 break;
             case TYPE_CHAR:
                 // printf("HEKKO\t");
-                printf("char\t\t\t");
+                printf("char\t");
                 if (sym->value == NULL){
-                    printf("NULL\t\t");
+                    printf("\tNULL\t\t");
                 }
                 else{
-                    printf("%s\t\t\t", (char*)sym->value);
+                    printf("\t%s\t\t", (char*)sym->value);
                 }
                 break;
             case TYPE_PTR:
                 printf("ptr\t\t");
-                printf("%p\t\t", sym->value);
+                printf("%-10p\t", sym->value);
                 break;
             case TYPE_VOID:
                 printf("void\t\t");
@@ -164,44 +171,65 @@ void print_symboltable(symbol *table){//, char *name){
                 break;
             case TYPE_VOID_PTR:
                 printf("void*\t");
-                printf("%p\t\t", sym->value);
+                if (sym->value == NULL){
+                    printf("\t%-10p\t", sym->value);
+                }
+                else{
+                    printf("%-10p\t", sym->value);
+                }
                 break;
             case TYPE_INT_PTR:
                 printf("int*\t");
-                printf("%p\t\t", sym->value);
+                if (sym->value == NULL){
+                    printf("\t%-10p\t", sym->value);
+                }
+                else{
+                    printf("%-10p\t", sym->value);
+                }
                 break;
             case TYPE_CHAR_PTR:
                 printf("char*\t");
-                printf("%p\t\t", sym->value);
+                if (sym->value == NULL){
+                    printf("\t%-10p\t", sym->value);
+                }
+                else{
+                    printf("%-10p\t", sym->value);
+                }
+                // printf("%-10p\t", sym->value);
                 break;
         }
         // printf("%s\t\t", (char*)sym->value);
-        printf("%d\t\t", sym->size);
-        printf("%d\t\t", sym->offset);
+        printf("%-5d\t\t", sym->size);
+        printf("%d\t\t\t", sym->offset);
         switch(sym->category){
             case GLOBAL:
-                printf("GLOBAL\t\t");
+                printf("GLB\t\t");
                 break;
             case LOCAL:
-                printf("LOCAL\t\t");
+                printf("LCL\t\t");
                 break;
             case PARAMETER:
-                printf("PARAMETER\t");
+                printf("PRM\t\t");
                 break;
             case FUNCTION:
-                printf("FUNCTION\t");
+                printf("FUN\t\t");
                 break;
             default:
                 if (table == global_table){
-                    printf("GLOBAL\t\t");
+                    printf("GLB\t\t");
                 }
                 else{
-                    printf("LOCAL\t\t");
+                    printf("LCL\t\t");
                 }
         }
-        printf("%p\t\t\t", sym->nested_table);
-        printf("%p\n", sym->next);
-        printf("-------------------------------------------------------------------------------------------------------------------\n");
+        printf("%-10p\t\t\t\t", sym->nested_table);
+        if (sym->nested_table == NULL){
+            printf("\t%-10p\n", sym->next);
+        }
+        else{
+            printf("%-10p\n", sym->next);
+        }
+        printf("---------------------------------------------------------------------------------------------------------------------------------------\n");
         sym = sym->next;
     }
     printf("\n\n");
@@ -212,8 +240,10 @@ void print_all_ST(){
     print_symboltable(sym);
     while(sym != NULL){
         if (sym->nested_table != NULL){
-            printf("Name: ST.%s \t\t\t\t\t\t\t\t\t\t\t\t\t Parent: ST.GLB\n", sym->name);
-            print_symboltable(sym->nested_table);
+            if (sym->nested_table->name != NULL){
+                printf("Name: ST.%-5s\t\tParent: ST.GLB\n", sym->name);
+                print_symboltable(sym->nested_table);
+            }
         }
         sym = sym->next;
     }
@@ -254,7 +284,7 @@ void emit(opcodeType op, char *result, char *arg1, char *arg2){
         printf("-->Emitting quad %s\n", result);
         
         new->op = op;
-        new->result = result;
+        new->result = strdup(result);
         new->arg1 = arg1;
         new->arg2 = arg2;
         
@@ -268,19 +298,19 @@ void emit(opcodeType op, char *result, char *arg1, char *arg2){
 
 
 void print_quad_array(){
-    printf("=========================================================\n");
-    printf("Instr No.\tOp\t\t\tResult\t\tArg1\tArg2\n");
-    printf("=========================================================\n");
+    printf("===============================================================\n");
+    printf("Instr No.\t\tOp\t\t\tResult\t\t\tArg1\t\tArg2\n");
+    printf("===============================================================\n");
         
     for (int i = 0; i < next_instr; i++){
         // printf("%p\t\t", QuadArray[i]);
-        printf("%d\t\t\t", i);
-        printf("%d\t\t\t", QuadArray[i]->op);
-        printf("%s\t\t", QuadArray[i]->result);
-        printf("%s\t\t", QuadArray[i]->arg1);
-        printf("%s \n", QuadArray[i]->arg2);
+        printf("%-5d\t\t\t", i);
+        printf("%-5d\t\t\t", QuadArray[i]->op);
+        printf("%-5s\t\t", QuadArray[i]->result);
+        printf("%-5s\t\t", QuadArray[i]->arg1);
+        printf("%-5s \n", QuadArray[i]->arg2);
         // printf("%p\n", QuadArray[i]->next);
-        printf("----------------------------------------------------------\n");
+        printf("---------------------------------------------------------------\n");
     }
     printf("Printed\n\n");
 }
@@ -315,6 +345,12 @@ data_type pop(DataTypeStack *s){
 
 DataTypeStack dTypeStack;
 
+void printArray(int *arr, int size){
+    for (int i = 0; i < size; i++){
+        printf("%d, ", arr[i]);
+    }
+    printf("\n");
+}
 
 void copyArray(int* dest, int* src, int size){
     for (int i = 0; i < size; i++){
@@ -322,6 +358,37 @@ void copyArray(int* dest, int* src, int size){
     }
 }
 
+void backpatch(int stmList[], int addr) {
+    char addr_str[MAXTEMP];
+    sprintf(addr_str, "%d", addr);
+    for (int i = 0; i < MAXLIST; i++) {
+        int index = stmList[i];
+        QuadArray[index]->result = strdup(addr_str);
+    }
+}
+
+int* makelist(int l){
+    int *newList = (int *)malloc(sizeof(int) * MAXLIST);
+    newList[0] = l;
+    return newList;
+}
+
+// int* mergeList(int *list1, int *list2){
+//     int *newList = (int *)malloc(sizeof(int) * MAXLIST);
+//     int i = 0;
+//     for (i = 0; i < MAXLIST; i++){
+//         if (list1[i] == -1){ 
+//             break;
+//         }
+//         newList[i] = list1[i];
+//     }
+//     for (int j = 0; j < MAXLIST; j++){
+//         if (list2[j] == -1){
+//             break;
+//         }
+//         newList[i++] = list2[
+
+int nextinstr = 0;
 
 int main(){
     // quadArray = create_quad_array();
@@ -330,12 +397,16 @@ int main(){
     printf("===Created global symbol table===\n");
     // print_symboltable(current_table);
     dTypeStack.top = -1;
+    printf("===Created data type stack===\n");
+    // nextinstr = 0;
+    printf("===Instruction Number Set to 0===\n");
 
     yyparse();
     // print_symboltable(global_table);
     // print_symboltable(current_table);
     print_all_ST();
     print_quad_array(QuadArray);
+    printf("%d\n", next_instr);
 
     return 0;
 }
