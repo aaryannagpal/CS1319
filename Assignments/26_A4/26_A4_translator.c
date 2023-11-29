@@ -158,7 +158,7 @@ void print_symboltable(symbol *table){//, char *name){
                     printf("\tNULL\t\t");
                 }
                 else{
-                    printf("\t%s\t\t", (char*)sym->value);
+                    printf("\t%-5s\t\t", (char*)sym->value);
                 }
                 break;
             case TYPE_PTR:
