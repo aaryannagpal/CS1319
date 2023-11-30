@@ -21,7 +21,7 @@ symbol *create_symboltable(){
     return table;
 }
 
-symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category, int arraySize){
+symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category, int arraySize, char *arrayName){
     // symbol *symb = table;
     symbol *temp = table;
     printf("\n\n");
@@ -77,10 +77,11 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
             temp->size = size;
             temp->category = category;
             temp->arraySize = arraySize;
+            temp->arrayName = arrayName;
             printf("-->Array size: %d\n", temp->arraySize);
             
             // table = temp;
-            print_symboltable(table);
+            // print_symboltable(table);
             return temp;
         }
         temp = temp->next;
