@@ -120,7 +120,7 @@ primary_expression:
                                 
                                 char *value = (char *)malloc(sizeof(char) * 10);
                                 sprintf(value, "%d", $1);
-                                $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, value, size_of_int, TEMP);
+                                $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, value, size_of_int, TEMP, 0);
                                 $$->isBoolean = false;
                                 emit(ASSIGN, $$->loc->name, value, NULL);
                                 printf("primary-expression - interger const\n");
@@ -132,7 +132,7 @@ primary_expression:
                                 char *value = (char *)malloc(sizeof(char) * 10);
                                 value = strdup($1);
 
-                                $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_CHAR, value, size_of_char, NONE);
+                                $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_CHAR, value, size_of_char, TEMP, 0);
                                 $$->isBoolean = false;
                                 emit(ASSIGN, $$->loc->name, value, NULL);
                                 printf("primary-expression - char detected\n");
@@ -144,7 +144,7 @@ primary_expression:
                                 char *value = (char *)malloc(sizeof(char) * 10);
                                 value = strdup($1);
 
-                                $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_CHAR, value, size_of_char, NONE);
+                                $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_CHAR, value, size_of_char, TEMP, 0);
                                 $$->isBoolean = false;
                                 emit(ASSIGN, $$->loc->name, value, NULL);
                                 printf("primary-expression - string detected\n");
@@ -172,7 +172,7 @@ postfix_expression:
                                                                         yyerror("Function not defined");
                                                                     }
                                                                     $$->loc = gentemp();
-                                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $1->loc->type, NULL, $1->loc->size, TEMP);
+                                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $1->loc->type, NULL, $1->loc->size, TEMP, 0);
                                                                     emit(CALL, $$->loc->name, $1->loc->name, NULL);
                                                                     
                                                                     printf("postfix-expression - function\n");
@@ -213,7 +213,7 @@ unary_expression:
                                             switch($1){
                                                 case '&':
                                                     $$->loc = gentemp();
-                                                    $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_PTR, NULL, size_of_pointer, NONE);
+                                                    $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_PTR, NULL, size_of_pointer, TEMP, 0);
                                                     emit(ADDR, $$->loc->name, $2->loc->name, NULL);
                     
                                                     printf("unary-expression - &\n");
@@ -222,7 +222,7 @@ unary_expression:
                                                 case '*':
                                                     $$->isPointer = true;
                                                     $$->loc = gentemp();
-                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $2->loc->type, NULL, $2->loc->size, NONE);
+                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $2->loc->type, NULL, $2->loc->size, TEMP, 0);
                                                     emit(PTR_ASSIGN, $$->loc->name, $2->loc->name, NULL);
                     
                                                     break;
@@ -234,7 +234,7 @@ unary_expression:
 
                                                 case '-':
                                                     $$->loc = gentemp();
-                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $2->loc->type, NULL, $2->loc->size, NONE);
+                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $2->loc->type, NULL, $2->loc->size, TEMP, 0);
                                                     emit(UMINUS, $$->loc->name, $2->loc->name, NULL);
                     
                                                     printf("unary-expression - -\n");
@@ -305,7 +305,7 @@ multiplicative_expression:
                                                             $$ = (Expression *)malloc(sizeof(Expression));
                                                             
                                                             $$->loc = gentemp();
-                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);                                                            
+                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0);                                                            
                                                             emit(MULT, $$->loc->name, $1->loc->name, $3->loc->name);
                             
                                                             printf("multiplicative-expression - Multiply\n");
@@ -317,7 +317,7 @@ multiplicative_expression:
                                                             $$ = (Expression *)malloc(sizeof(Expression));
                                                             $$->loc = gentemp();
                                                             
-                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);                                                            
+                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0);                                                            
                                                             emit(DIV, $$->loc->name, $1->loc->name, $3->loc->name);
                             
                                                             printf("multiplicative-expression - Divide\n");
@@ -329,7 +329,7 @@ multiplicative_expression:
                                                             $$ = (Expression *)malloc(sizeof(Expression));
                                                             $$->loc = gentemp();
                                                             
-                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);                                                            
+                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0);                                                            
                                                             emit(MOD, $$->loc->name, $1->loc->name, $3->loc->name);
                             
                                                             printf("multiplicative-expression - Modulo\n");
@@ -348,7 +348,7 @@ additive_expression:
                                                             $$ = (Expression *)malloc(sizeof(Expression));
                                                             $$->loc = gentemp();
                                                             
-                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);
+                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0);
                                                             emit(PLUS, $$->loc->name, $1->loc->name, $3->loc->name);
                             
                                                             printf("additive-expression - addition\n");
@@ -360,7 +360,7 @@ additive_expression:
                                                             $$ = (Expression *)malloc(sizeof(Expression));
                                                             $$->loc = gentemp();
                                                             
-                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);
+                                                            $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0);
                                                             emit(MINUS, $$->loc->name, $1->loc->name, $3->loc->name);
                             
                                                             printf("additive-expression - minus\n");
@@ -457,16 +457,23 @@ init_declarator:
     declarator                      {
                                         if (current_table == global_table){
                                             //printf("%p\n", current_table);
-                                            if($1->type == TYPE_INT || $1->type == TYPE_CHAR || $1->type == TYPE_PTR){
-                                                if ($1->type == TYPE_PTR){
+                                            if($1->type == TYPE_INT || $1->type == TYPE_CHAR || $1->type == TYPE_PTR || $1->type == TYPE_INT_PTR || $1->type == TYPE_CHAR_PTR || $1->type == TYPE_VOID_PTR){
+                                                if ($1->type == TYPE_PTR || $1->type == TYPE_INT_PTR || $1->type == TYPE_CHAR_PTR || $1->type == TYPE_VOID_PTR){
                                                     $1->size = size_of_pointer;
-                                                }                                                    
-                                                update_symboltable(current_table, $1->name, $1->type, 0, $1->size, NONE);
-                                                printf("init-declarator - value initialized\n");
+                                                }
+                                                //if ($1->arraySize != 0){
+                                                //    $1->size = $1->arraySize * $1->size;
+                                                //}
+                                                update_symboltable(current_table, $1->name, $1->type, 0, $1->size, GLOBAL, $1->arraySize);
+                                                printf("init-declarator - value initialized in global\n");
+                                            }
+                                            else{
+                                                printf("$1->type = %d\n", $1->type);
+                                                yyerror("Invalid type");
                                             }
                                         }
                                         else{
-                                            printf("init-declarator - value not initialized\n");
+                                            printf("init-declarator - value not globally initialized\n");
                                         }
                                     }
     | declarator '=' initializer    {
@@ -527,20 +534,37 @@ direct_declarator:
                                                             $$ = (symbol *)malloc(sizeof(symbol));
                                                             data_type dType = pop(&dTypeStack);
                                                             printf("Checking for: %s\n", $1->name);
-                                                            $1 = update_symboltable(current_table, $1->name, dType.type, 0, dType.size, NONE);
+                                                            if (current_table != global_table){
+                                                                $1 = update_symboltable(current_table, $1->name, dType.type, 0, dType.size, LOCAL, 0);
+                                                            }
+                                                            else{
+                                                                $1 = update_symboltable(current_table, $1->name, dType.type, 0, dType.size, NONE, 0);
+                                                            }
                                                             $$ = $1;
                                                             printf("direct-declarator - %s\n", $$->name);
                                                         }
-    | IDENTIFIER '['INTEGER_CONSTANT']'                 {printf("direct-declarator\n");}
+    | IDENTIFIER '['INTEGER_CONSTANT']'                 {   
+                                                            $$ = (symbol *)malloc(sizeof(symbol));
+                                                            data_type dType = pop(&dTypeStack);
+                                                            printf("Checking for: %s\n", $1->name);
+                                                            if (current_table != global_table){
+                                                                $1 = update_symboltable(current_table, $1->name, dType.type, 0, dType.size, LOCAL, $3);
+                                                            }
+                                                            else{
+                                                                $1 = update_symboltable(current_table, $1->name, dType.type, 0, dType.size, NONE, $3);
+                                                            }
+                                                            $$ = $1;
+                                                            printf("direct-declarator - array\n");
+                                                        }
     | IDENTIFIER '('create_table parameter_list_opt')'  {   
                                                             table_name = strdup($1->name);
                                                             data_type dType = pop(&dTypeStack);
-                                                            $1 = update_symboltable(global_table, $1->name, dType.type, 0, 0, FUNCTION);
+                                                            $1 = update_symboltable(global_table, $1->name, dType.type, 0, 0, FUNCTION, 0);
 
                                                             if (dType.type != TYPE_VOID){
                                                                 //print_symboltable(current_table);
                                                                 symbol *RV = symlook(current_table, "retVal");
-                                                                RV = update_symboltable(current_table, RV->name, dType.type, 0, dType.size, NONE);
+                                                                RV = update_symboltable(current_table, RV->name, dType.type, 0, dType.size, LOCAL, 0);
                                                             }
                                                             $1->nested_table = current_table;
                                                             table_pointer = current_table;
@@ -573,14 +597,14 @@ parameter_declaration:
     type_specifier pointer IDENTIFIER       {   
 
                                                 data_type dType = pop(&dTypeStack);
-                                                $3 = update_symboltable(current_table, $3->name, dType.type - TYPE_PTR, 0, size_of_pointer, PARAMETER);
+                                                $3 = update_symboltable(current_table, $3->name, dType.type - TYPE_PTR, 0, size_of_pointer, PARAMETER, 0);
                                                 // add to parameter list
                                             
                                                 printf("parameter-declaration - incom\n");
                                             }
     | type_specifier IDENTIFIER             {   
                                                 data_type dType = pop(&dTypeStack);
-                                                $2 = update_symboltable(current_table, $2->name, dType.type, 0, dType.size, PARAMETER);
+                                                $2 = update_symboltable(current_table, $2->name, dType.type, 0, dType.size, PARAMETER, 0);
                                                 printf("parameter-declaration - incom\n");
                                             }
     | type_specifier pointer                {
@@ -657,7 +681,7 @@ block_item:
     declaration {
                     $$ = (Statement *)malloc(sizeof(Statement));
                     
-                    printf("block-item - normal\n");
+                    printf("block-item - declaration\n");
                 }
     | statement {
                     $$ = $1;
