@@ -68,6 +68,7 @@ extern char *table_name;
 
 symbol *symlook(symbol *table, char *name);
 void print_symboltable(symbol *table);
+symbol *searchTable(symbol *table, char *name);
 symbol *create_symboltable();
 symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category);
 symbol *gentemp();
@@ -89,22 +90,27 @@ extern DataTypeStack dTypeStack;
 extern data_type intType ;
 extern data_type charType;
 extern data_type voidType;
-extern data_type ptrType ;
+extern data_type ptrType;
+
+typedef struct LL{
+	int instr;
+	struct LL *next;
+}List;
+
 typedef struct exp{
 	symbol *loc;
 	bool isArray;
 	bool isPointer;
 	bool isBoolean;
 
-	int trueList[MAXLIST];
-	int falseList[MAXLIST];
-
-	int nextList[MAXLIST]; //only for Statements
+	List *truelist;
+	List *falselist;
+	List *nextlist; // for statement references
 
 }Expression;
 
 typedef struct stat{
-	int nextList[MAXLIST];
+	List *nextlist;
 }Statement;
 
 
@@ -127,7 +133,9 @@ typedef enum {
 
 	FUNC,
 	FUNC_END,
+	CALL,
 	PARAM,
+	RET,
 } opcodeType;
 
 typedef struct quad_tag {
@@ -140,8 +148,12 @@ extern quad *QuadArray[MAXQARRAY];
 void emit(opcodeType op, char *result, char *arg1, char *arg2);
 void print_quad_array();
 
-
+static int next_instr = 0;
 void copyArray(int *dest, int *src, int size);
+void backpatch(List *list, int instr);
+void printList(List *stmlist);
+
+
 
 // quad *new_quad_binary(opcodeType op1, char *s1, char *s2, char *s3);
 
