@@ -21,7 +21,7 @@ symbol *create_symboltable(){
     return table;
 }
 
-symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category){
+symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category, int arraySize){
     // symbol *symb = table;
     symbol *temp = table;
     printf("\n\n");
@@ -62,15 +62,25 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
                 //     *(char**)temp->value = NULL;
                 //     break;
             }
-
-            printf("-->%d\n", temp->type);
-
             // temp->value = value;
+            // if (table != global_table){
+            //     if (arraySize > 0){
+            //         temp->size = size * arraySize;
+            //     }
+            //     else{
+            //         temp->size = size;
+            //     }
+            // }
+            // else{
+            //     temp->size = size;
+            // }
             temp->size = size;
             temp->category = category;
+            temp->arraySize = arraySize;
+            printf("-->Array size: %d\n", temp->arraySize);
             
             // table = temp;
-            // print_symboltable(table);
+            print_symboltable(table);
             return temp;
         }
         temp = temp->next;
@@ -201,26 +211,35 @@ void print_symboltable(symbol *table){//, char *name){
     }
 
     // printf("Name: %s\n", sym->name);
-    printf("=======================================================================================================================================\n");
-    printf("Current\t\t\t\tName\t\tType\t\tValue\t\tSize\tOffset\t\tCategory\tNested Table\t\t\t\tNext\n");
-    printf("=======================================================================================================================================\n");
+    printf("===============================================================================================================================================\n");
+    printf("Current\t\t\t\tName\t\tType\t\t\t\t\tValue\t\tSize\tOffset\t\tCategory\tNested Table\t\t\t\tNext\n");
+    printf("===============================================================================================================================================\n");
     while(sym != NULL){
         printf("%p\t\t", sym);
         printf("%-10s\t", sym->name);
         switch(sym->type){
             case TYPE_INT:
-                printf("int\t\t\t");
+                if (sym->arraySize > 0){
+                    printf("array(int, %d)\t\t\t", sym->arraySize);
+                }                
+                else{
+                    printf("int\t\t\t\t\t\t");
+                }
                 if (sym->value == NULL){
                     printf("NULL\t\t");
                 }
                 else{
                     printf("%-10d\t", atoi(sym->value));
                 }
-
                 break;
+
             case TYPE_CHAR:
-                // printf("HEKKO\t");
-                printf("char\t");
+                if (sym->arraySize > 0){
+                    printf("array(char, %d)\t\t", sym->arraySize);
+                }                
+                else{
+                    printf("char\t\t\t\t");
+                }
                 if (sym->value == NULL){
                     printf("\tNULL\t\t");
                 }
@@ -228,16 +247,33 @@ void print_symboltable(symbol *table){//, char *name){
                     printf("\t%-5s\t\t", (char*)sym->value);
                 }
                 break;
+
             case TYPE_PTR:
-                printf("ptr\t\t");
+            if (sym->arraySize > 0){
+                    printf("array(ptr, %d)\t\t", sym->arraySize);
+                }                
+                else{
+                    printf("ptr\t\t\t\t\t");
+                }
                 printf("%-10p\t", sym->value);
                 break;
             case TYPE_VOID:
-                printf("void\t\t");
+                if (sym->arraySize > 0){
+                    printf("array(void, %d)\t\t\t", sym->arraySize);
+                }                
+                else{
+                    printf("void\t\t\t\t\t");
+                }
                 printf("NULL\t\t");
                 break;
+
             case TYPE_VOID_PTR:
-                printf("void*\t");
+                if (sym->arraySize > 0){
+                    printf("array(void*, %d)\t\t\t", sym->arraySize);
+                }                
+                else{
+                    printf("void*\t\t\t\t\t");
+                }
                 if (sym->value == NULL){
                     printf("\t%-10p\t", sym->value);
                 }
@@ -245,8 +281,14 @@ void print_symboltable(symbol *table){//, char *name){
                     printf("%-10p\t", sym->value);
                 }
                 break;
+                
             case TYPE_INT_PTR:
-                printf("int*\t");
+                if (sym->arraySize > 0){
+                    printf("array(int*, %d)\t\t", sym->arraySize);
+                }                
+                else{
+                    printf("int*\t\t\t\t");
+                }
                 if (sym->value == NULL){
                     printf("\t%-10p\t", sym->value);
                 }
@@ -254,8 +296,19 @@ void print_symboltable(symbol *table){//, char *name){
                     printf("%-10p\t", sym->value);
                 }
                 break;
+
             case TYPE_CHAR_PTR:
-                printf("char*\t");
+                if (sym->arraySize > 0){
+                    if (sym->arraySize >= 10){
+                        printf("array(char*, %d)\t", sym->arraySize);
+                    }
+                    else{
+                        printf("array(char*, %d)\t\t", sym->arraySize);
+                    }
+                }                
+                else{
+                    printf("char*\t\t\t\t");
+                }
                 if (sym->value == NULL){
                     printf("\t%-10p\t", sym->value);
                 }
@@ -266,7 +319,13 @@ void print_symboltable(symbol *table){//, char *name){
                 break;
         }
         // printf("%s\t\t", (char*)sym->value);
-        printf("%-5d\t\t", sym->size);
+        if (sym->arraySize > 0){
+            printf("%-5d\t\t", sym->size * sym->arraySize);
+        }
+        else{
+            printf("%-5d\t\t", sym->size);
+        }
+        // printf("%-5d\t\t", sym->size);
         printf("%d\t\t\t", sym->offset);
         switch(sym->category){
             case GLOBAL:
@@ -281,13 +340,16 @@ void print_symboltable(symbol *table){//, char *name){
             case FUNCTION:
                 printf("FUN\t\t");
                 break;
-            default:
-                if (table == global_table){
-                    printf("GLB\t\t");
-                }
-                else{
-                    printf("LCL\t\t");
-                }
+            case TEMP:
+                printf("TMP\t\t");
+                break;
+            // default:
+            //     if (table == global_table){
+            //         printf("GLB\t\t");
+            //     }
+            //     else{
+            //         printf("LCL\t\t");
+            //     }
         }
         printf("%-10p\t\t\t\t", sym->nested_table);
         if (sym->nested_table == NULL){
@@ -296,7 +358,7 @@ void print_symboltable(symbol *table){//, char *name){
         else{
             printf("%-10p\n", sym->next);
         }
-        printf("---------------------------------------------------------------------------------------------------------------------------------------\n");
+        printf("-----------------------------------------------------------------------------------------------------------------------------------------------\n");
         sym = sym->next;
     }
     printf("\n\n");
@@ -321,6 +383,7 @@ symbol *gentemp(){//data_type type, void *value){
     char *name = (char *)malloc(sizeof(char) * 10);
     sprintf(name, "t%d", count++);
     symbol *temp = symlook(current_table, name);
+    temp->category = TEMP;
     // printf("Created temporary %s\n", name);
     // temp->type = type.type;
     // temp->size = type.size;
