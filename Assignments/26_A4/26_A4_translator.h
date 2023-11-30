@@ -31,6 +31,7 @@ typedef enum{
 	TYPE_INT,
 	TYPE_CHAR,
 	TYPE_PTR,
+	//TYPE_ARRAY = 10,
 }enumtype;
 
 typedef enum{
@@ -41,6 +42,8 @@ typedef enum{
 	FUNCTION,
 	TEMP
 }enumcat;
+
+
 typedef struct sym {
 	char *name;
 	enumtype type;
@@ -50,7 +53,8 @@ typedef struct sym {
 	enumcat category;	
 	// symboltable *nested_table;
 	struct sym *nested_table;
-	struct sym *next;   
+	struct sym *next;
+	int arraySize;
 }symbol;
 
 // something for parameter list
@@ -70,7 +74,7 @@ symbol *symlook(symbol *table, char *name);
 void print_symboltable(symbol *table);
 symbol *searchTable(symbol *table, char *name);
 symbol *create_symboltable();
-symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category);
+symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category, int arraySize);
 symbol *gentemp();
 
 typedef struct data_type{
@@ -96,6 +100,8 @@ typedef struct LL{
 	int instr;
 	struct LL *next;
 }List;
+
+	
 
 typedef struct exp{
 	symbol *loc;
