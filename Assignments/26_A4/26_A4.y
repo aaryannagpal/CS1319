@@ -19,6 +19,8 @@
     Expression *expr;
     Statement *stm;
     char unary_op;
+
+    int paranum;
 };
 
 /*start symbol*/
@@ -83,6 +85,10 @@
     block_item_list_opt
 
 %type <unary_op> unary_operator
+
+%type <paranum> 
+    argument_expression_list 
+    argument_expression_list_opt
 %%
 
 /*table*/
@@ -105,12 +111,13 @@ primary_expression:
                                 $$ = (Expression *)malloc(sizeof(Expression));
                                 $$->loc = $1;
                                 $$->isBoolean = false;
+                                
                                 printf("primary-expression - identifer found\n");
                             }
     | INTEGER_CONSTANT      {
                                 $$ = (Expression *)malloc(sizeof(Expression));
                                 $$->loc = gentemp();
-                                // printf("%d\n", $1);
+                                
                                 char *value = (char *)malloc(sizeof(char) * 10);
                                 sprintf(value, "%d", $1);
                                 $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, value, size_of_int, TEMP);
@@ -121,7 +128,7 @@ primary_expression:
     | CHARACTER_CONSTANT    {
                                 $$ = (Expression *)malloc(sizeof(Expression));
                                 $$->loc = gentemp();
-
+                                
                                 char *value = (char *)malloc(sizeof(char) * 10);
                                 value = strdup($1);
 
@@ -133,7 +140,7 @@ primary_expression:
     | STRING_LITERAL        {
                                 $$ = (Expression *)malloc(sizeof(Expression));
                                 $$->loc = gentemp();
-
+                                
                                 char *value = (char *)malloc(sizeof(char) * 10);
                                 value = strdup($1);
 
@@ -158,18 +165,41 @@ postfix_expression:
                                                                     
                                                                     printf("postfix-expression - array\n");
                                                                 }
-    | postfix_expression '(' argument_expression_list_opt ')'   {printf("postfix-expression\n");}
+    | postfix_expression '(' argument_expression_list_opt ')'   {
+                                                                    $$ = (Expression *)malloc(sizeof(Expression));
+                                                                    
+                                                                    if ($1->loc->nested_table == NULL){
+                                                                        yyerror("Function not defined");
+                                                                    }
+                                                                    $$->loc = gentemp();
+                                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $1->loc->type, NULL, $1->loc->size, TEMP);
+                                                                    emit(CALL, $$->loc->name, $1->loc->name, NULL);
+                                                                    
+                                                                    printf("postfix-expression - function\n");
+                                                                }
     | postfix_expression ARROW IDENTIFIER                       {printf("postfix-expression\n");}
     ;
 
 argument_expression_list_opt:
-    argument_expression_list
-    |
+    argument_expression_list    {
+                                    $$ = $1;
+                                }
+    |                           {
+                                    $$ = 0;
+                                }
     ;
 
 argument_expression_list:
-    assignment_expression                                   {printf("argument-expression-list\n");}
-    | argument_expression_list ',' assignment_expression    {printf("argument-expression-list\n");}
+    assignment_expression                                   {
+                                                                $$ = 1;
+                                                                emit(PARAM, $1->loc->name, NULL, NULL);
+                                                                printf("argument-expression-list - param\n");
+                                                            }
+    | argument_expression_list ',' assignment_expression    {
+                                                                $$ = $1 + 1;
+                                                                emit(PARAM, $3->loc->name, NULL, NULL);
+                                                                printf("argument-expression-list - n-param\n");
+                                                            }
     ;
 
 unary_expression:
@@ -179,6 +209,7 @@ unary_expression:
                                         }
     | unary_operator unary_expression   {
                                             $$ = (Expression *)malloc(sizeof(Expression));
+                                            
                                             switch($1){
                                                 case '&':
                                                     $$->loc = gentemp();
@@ -212,8 +243,8 @@ unary_expression:
                                                 case '!':
                                                     if ($2->isBoolean){
                                                         $$->isBoolean = true;
-                                                        copyArray($2->trueList, $$->falseList, MAXLIST);
-                                                        copyArray($2->falseList, $$->trueList, MAXLIST);
+                                                        //copyArray($2->trueList, $$->falseList, MAXLIST);
+                                                        //copyArray($2->falseList, $$->trueList, MAXLIST);
                                                         $$->loc = $2->loc;
                                                         printf("unary-expression - !\n");
 
@@ -253,6 +284,7 @@ unary_operator:
 multiplicative_expression:
     unary_expression                                    {
                                                             $$ = (Expression *)malloc(sizeof(Expression));
+                                                            
                                                             if ($1->isArray){
                                                                 printf("multiplicative-expression - array\n");
                                                             }
@@ -271,6 +303,7 @@ multiplicative_expression:
                                                                 yyerror("Type mismatch");
                                                             }
                                                             $$ = (Expression *)malloc(sizeof(Expression));
+                                                            
                                                             $$->loc = gentemp();
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);                                                            
                                                             emit(MULT, $$->loc->name, $1->loc->name, $3->loc->name);
@@ -283,6 +316,7 @@ multiplicative_expression:
                                                             }
                                                             $$ = (Expression *)malloc(sizeof(Expression));
                                                             $$->loc = gentemp();
+                                                            
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);                                                            
                                                             emit(DIV, $$->loc->name, $1->loc->name, $3->loc->name);
                             
@@ -294,6 +328,7 @@ multiplicative_expression:
                                                             }
                                                             $$ = (Expression *)malloc(sizeof(Expression));
                                                             $$->loc = gentemp();
+                                                            
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);                                                            
                                                             emit(MOD, $$->loc->name, $1->loc->name, $3->loc->name);
                             
@@ -312,6 +347,7 @@ additive_expression:
                                                             }
                                                             $$ = (Expression *)malloc(sizeof(Expression));
                                                             $$->loc = gentemp();
+                                                            
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);
                                                             emit(PLUS, $$->loc->name, $1->loc->name, $3->loc->name);
                             
@@ -323,6 +359,7 @@ additive_expression:
                                                             }
                                                             $$ = (Expression *)malloc(sizeof(Expression));
                                                             $$->loc = gentemp();
+                                                            
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, NONE);
                                                             emit(MINUS, $$->loc->name, $1->loc->name, $3->loc->name);
                             
@@ -419,7 +456,7 @@ declaration:
 init_declarator:
     declarator                      {
                                         if (current_table == global_table){
-                                            printf("%p\n", current_table);
+                                            //printf("%p\n", current_table);
                                             if($1->type == TYPE_INT || $1->type == TYPE_CHAR || $1->type == TYPE_PTR){
                                                 if ($1->type == TYPE_PTR){
                                                     $1->size = size_of_pointer;
@@ -564,7 +601,7 @@ identifier_opt:
 initializer:
     assignment_expression   {   
                                 $$ = $1->loc;
-                                printf("initializer - loc given\n");
+                                printf("initializer - normal\n");
                             }
     ;
 
@@ -572,10 +609,17 @@ initializer:
 
 statement:
     compound_statement      {printf("statement\n");}
-    | expression_statement  {printf("statement\n");}
+    | expression_statement  {
+                                $$ = (Statement *)malloc(sizeof(Statement));
+                                $$->nextlist = $1->nextlist;
+                                printf("statement COME BACK\n");
+                            }
     | selection_statement   {printf("statement\n");}
     | iteration_statement   {printf("statement\n");}
-    | jump_statement        {printf("statement\n");}
+    | jump_statement        {
+                                $$ = $1;
+                                printf("statement - jumped\n");
+                            }
     ;
 
 compound_statement:
@@ -586,8 +630,14 @@ compound_statement:
     ;
 
 block_item_list_opt:
-    block_item_list
-    |
+    block_item_list {
+                        $$ = $1;
+                        printf("block-item-list-opt - normal\n");
+                    }
+    |               {
+                        
+                        printf("block-item-list-opt - empty\n");
+                    }
     ;
 
 block_item_list:
@@ -595,24 +645,46 @@ block_item_list:
                                         $$ = $1;
                                         printf("block-item-list - normal\n");
                                     }
-    | block_item_list block_item    {printf("block-item-list\n");}
+    | block_item_list block_item    {
+                                        $$ = $2;
+
+                                        backpatch($1->nextlist, next_instr);
+                                        printf("block-item-list - backpatch\n");
+                                    }
     ;
 
 block_item:
     declaration {
                     $$ = (Statement *)malloc(sizeof(Statement));
+                    
                     printf("block-item - normal\n");
                 }
-    | statement {printf("block-item\n");}
+    | statement {
+                    $$ = $1;
+                    printf("block-item - statement\n");
+                }
     ;
 
 expression_statement:
-    expression_opt ';'  {printf("expression-statement\n");}
+    expression ';'  {   
+                        $$ = $1;
+                        printf("expression-statement - incomp\n");
+                    }
+    | ';'           {
+                        $$ = (Expression *)malloc(sizeof(Expression));
+                        printf("expression-statement - null\n");
+                    }
     ;
 
 expression_opt:
-    expression
-    |
+    expression  {
+                    $$ = $1;
+                    printf("expression-opt - normal\n");
+                }
+    |           {
+                    //$$ = NULL;
+                    printf("expression-opt - null\n");
+                }
     ;
 
 selection_statement:
@@ -625,7 +697,35 @@ iteration_statement:
     ;
 
 jump_statement:
-    RETURN expression_opt ';'   {printf("jump-statement\n");}
+    RETURN expression ';'       {
+                                    symbol *RV = searchTable(current_table, "retVal");
+                                    if (RV == NULL){
+                                        yyerror("Return value mismatch.");
+                                    }
+                                    else{
+                                        if ($2->loc->type != RV->type){
+                                            yyerror("Return value mismatch.");
+                                        }
+                                        else{
+                                            $$ = (Statement *)malloc(sizeof(Statement));
+                                            
+                                            emit(RET, $2->loc->name, NULL, NULL);
+                                        }
+                                    }
+                                    printf("jump-statement - to change\n");
+                                }
+    | RETURN ';'                {   
+                                    symbol *RV = searchTable(current_table, "retVal");
+                                    if (RV != NULL){
+                                        yyerror("Return value mismatch. Type not VOID");
+                                    }
+                                    else{
+                                        $$ = (Statement *)malloc(sizeof(Statement));
+                                        
+                                        emit(RET, "", NULL, NULL);
+                                        printf("jump-statement - null to change\n");
+                                    }
+                                }
     ;
     
 translation_unit:
