@@ -55,6 +55,7 @@ typedef struct sym {
 	struct sym *nested_table;
 	struct sym *next;
 	int arraySize;
+	char *arrayName;
 }symbol;
 
 // something for parameter list
@@ -74,7 +75,7 @@ symbol *symlook(symbol *table, char *name);
 void print_symboltable(symbol *table);
 symbol *searchTable(symbol *table, char *name);
 symbol *create_symboltable();
-symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category, int arraySize);
+symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category, int arraySize, char *arrayName);
 symbol *gentemp();
 
 typedef struct data_type{
@@ -131,6 +132,8 @@ typedef enum {
 	
 	ADDR,
 	PTR_ASSIGN,
+	READIDX, // res=arg1[arg2]
+	WRITEIDX, // res[arg1]=arg2
 	UPLUS,
 	UMINUS,
 	NOT,
