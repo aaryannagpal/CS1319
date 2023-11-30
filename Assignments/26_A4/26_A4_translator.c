@@ -70,7 +70,7 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
             temp->category = category;
             
             // table = temp;
-            print_symboltable(table);
+            // print_symboltable(table);
             return temp;
         }
         temp = temp->next;
@@ -78,9 +78,43 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
     printf("-->Symbol table entry for %s not found.\n", name);
 }
 
+symbol *searchTable(symbol *table, char *name){
+    symbol *temp = table;
+    
+    if (temp == NULL){
+        printf("-->Table empty therefore %s not found.\n", name);
+        return NULL;
+    }
+
+    else{
+        if (temp->name == NULL){
+            printf("-->Void Table empty therefore %s not found.\n", name);
+            return NULL;
+        }
+    }
+
+    while(temp->next != NULL){
+        if(strcmp(temp->name, name) == 0){
+            printf("-->Found symbol table entry for %s\n", temp->name);
+            return temp;
+        }
+        temp = temp->next;
+    }
+    
+    if (strcmp(temp->name, name) == 0){
+        printf("-->Found symbol table entry for %s\n", temp->name);
+        return temp;
+    }
+
+    printf("-->Symbol table entry for %s not found.\n", name);
+    return NULL;
+}
+
 symbol *symlook(symbol *table, char *name){
     symbol *symb = table;
+    symbol *temp = global_table;
 
+    // searching whatever table this is
     if (symb->name == NULL){ // First entry 
         symb->name = strdup(name);
         // symb->name = name;
@@ -103,10 +137,43 @@ symbol *symlook(symbol *table, char *name){
 
     if (strcmp(symb->name, name) == 0){
         printf("-->Found symbol table entry for %s\n", name);
-        print_symboltable(symb);
+        // print_symboltable(symb);
         return symb;
     }
-    printf("-->Symbol table entry for %s not found. Creating new entry\n", name);
+
+    // searching global if not found in current table
+    
+
+    if (temp->name == NULL){ // First entry 
+        temp->name = strdup(name);
+        // symb->name = name;
+        table = temp;
+        printf("\n\n");
+        printf("-->Created first global symbol table entry for %s\n", name);
+        // print_symboltable(table);
+        printf("\n\n");
+        return table;
+    }
+    printf("-->Global table not empty! Moving on:\n");
+    while(temp->next != NULL){
+        printf("==>Comparing %s\n", temp->name);
+        if(strcmp(temp->name, name) == 0){
+            printf("-->Found global symbol table entry for %s\n", name);
+            // print_symboltable(symb);
+            return temp;
+        }
+        temp = temp->next;
+    }
+    if (strcmp(temp->name, name) == 0){
+        printf("-->Found global symbol table entry for %s\n", name);
+        // print_symboltable(symb);
+        return temp;
+    }
+
+
+
+
+    printf("-->Symbol table entry for %s not found. Creating new local entry\n", name);
     printf("%s\n", name);
     symbol *new = (symbol *)malloc(sizeof(symbol));
     new->name = strdup(name);
@@ -272,7 +339,7 @@ char *table_name = NULL;
 
 quad *QuadArray[MAXQARRAY];
 
-static int next_instr = 0;
+static int next_instr;
 
 void emit(opcodeType op, char *result, char *arg1, char *arg2){
 
@@ -298,19 +365,19 @@ void emit(opcodeType op, char *result, char *arg1, char *arg2){
 
 
 void print_quad_array(){
-    printf("===============================================================\n");
-    printf("Instr No.\t\tOp\t\t\tResult\t\t\tArg1\t\tArg2\n");
-    printf("===============================================================\n");
+    printf("====================================================================\n");
+    printf("Instr No.\t\tOp\t\t\t\tResult\t\t\tArg1\t\tArg2\n");
+    printf("====================================================================\n");
         
     for (int i = 0; i < next_instr; i++){
         // printf("%p\t\t", QuadArray[i]);
         printf("%-5d\t\t\t", i);
         printf("%-5d\t\t\t", QuadArray[i]->op);
-        printf("%-5s\t\t", QuadArray[i]->result);
+        printf("%-10s\t\t", QuadArray[i]->result);
         printf("%-5s\t\t", QuadArray[i]->arg1);
         printf("%-5s \n", QuadArray[i]->arg2);
         // printf("%p\n", QuadArray[i]->next);
-        printf("---------------------------------------------------------------\n");
+        printf("--------------------------------------------------------------------\n");
     }
     printf("Printed\n\n");
 }
@@ -358,39 +425,58 @@ void copyArray(int* dest, int* src, int size){
     }
 }
 
-void backpatch(int stmList[], int addr) {
-    char addr_str[MAXTEMP];
-    sprintf(addr_str, "%d", addr);
-    for (int i = 0; i < MAXLIST; i++) {
-        int index = stmList[i];
-        QuadArray[index]->result = strdup(addr_str);
+void backpatch(List *stmList, int inst)
+{
+    List *temp = stmList;
+    while (temp != NULL)
+    {   
+        printf("-->Backpatching from %d\n", temp->instr);
+        if (temp->instr < 0){
+            printf("-->Backpatching %d\n", inst);
+            char inst_str[10];
+            sprintf(inst_str, "%d", inst);
+            QuadArray[temp->instr]->result = strdup(inst_str);
+        }
+        temp = temp->next;
+    }
+	// return;
+}
+
+List *addToList(List *stmList, int inst)
+{
+    List *temp = stmList;
+    List *new = (List *)malloc(sizeof(List));
+    new->instr = inst;
+    new->next = NULL;
+    if (temp == NULL)
+    {
+        stmList = new;
+        return stmList;
+    }
+    else
+    {
+        while (temp->next != NULL)
+        {
+            temp = temp->next;
+        }
+        temp->next = new;
+        return stmList;
     }
 }
 
-int* makelist(int l){
-    int *newList = (int *)malloc(sizeof(int) * MAXLIST);
-    newList[0] = l;
-    return newList;
+void printList(List *stmList){
+    List *temp = stmList;
+    while (temp != NULL){
+        printf("%d, ", temp->instr);
+        temp = temp->next;
+    }
+    printf("\n");
 }
 
-// int* mergeList(int *list1, int *list2){
-//     int *newList = (int *)malloc(sizeof(int) * MAXLIST);
-//     int i = 0;
-//     for (i = 0; i < MAXLIST; i++){
-//         if (list1[i] == -1){ 
-//             break;
-//         }
-//         newList[i] = list1[i];
-//     }
-//     for (int j = 0; j < MAXLIST; j++){
-//         if (list2[j] == -1){
-//             break;
-//         }
-//         newList[i++] = list2[
-
-int nextinstr = 0;
 
 int main(){
+
+    // static int nextInstr = 0;
     // quadArray = create_quad_array();
     global_table = create_symboltable();
     current_table = global_table;
@@ -398,7 +484,7 @@ int main(){
     // print_symboltable(current_table);
     dTypeStack.top = -1;
     printf("===Created data type stack===\n");
-    // nextinstr = 0;
+    // next_instr = 0;
     printf("===Instruction Number Set to 0===\n");
 
     yyparse();
@@ -407,6 +493,7 @@ int main(){
     print_all_ST();
     print_quad_array(QuadArray);
     printf("%d\n", next_instr);
+    // printf("%d\n", nextInstr);
 
     return 0;
 }
