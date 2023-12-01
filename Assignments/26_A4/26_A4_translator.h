@@ -18,10 +18,6 @@
 extern  char* yytext;
 extern  int yyparse();
 
-// const unsigned int size_of_char = 1;
-// const unsigned int size_of_int = 4;
-// const unsigned int size_of_pointer = 4;
-
 /* Symbol Table */
 typedef enum{
 	TYPE_VOID_PTR = -3,
@@ -31,7 +27,6 @@ typedef enum{
 	TYPE_INT,
 	TYPE_CHAR,
 	TYPE_PTR,
-	//TYPE_ARRAY = 10,
 }enumtype;
 
 typedef enum{
@@ -51,21 +46,12 @@ typedef struct sym {
 	int size;
 	int offset;
 	enumcat category;	
-	// symboltable *nested_table;
 	struct sym *nested_table;
 	struct sym *next;
 	int arraySize; 
 	char *arrayName;
 }symbol;
 symbol* create_symbol();
-
-// something for parameter list
-
-// typedef struct symtab {
-// 	char *name;
-// 	symboltable *parent;
-// 	symbol *syms;
-// }symboltable;
 
 extern symbol *global_table;
 extern symbol *current_table;
@@ -183,9 +169,4 @@ List *merge(List *list1, List *list2);
 void makeTAC();
 void print_all_ST();
 
-// quad *new_quad_binary(opcodeType op1, char *s1, char *s2, char *s3);
-
-// quad *new_quad_unary(opcodeType op1, char *s1, char *s2);
-
-// void print_quad(quad* q);
 #endif // __PARSER_H
