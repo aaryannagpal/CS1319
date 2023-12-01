@@ -20,7 +20,7 @@
     Statement *stm;
     char unary_op;
 
-    int paranum;
+    int num;
 };
 
 /*start symbol*/
@@ -70,7 +70,6 @@
 %type <symp> 
     declarator
     direct_declarator
-    identifier_opt
     init_declarator
     initializer
 
@@ -83,12 +82,14 @@
     block_item
     block_item_list
     block_item_list_opt
+    M
 
 %type <unary_op> unary_operator
 
-%type <paranum> 
+%type <num> 
     argument_expression_list 
     argument_expression_list_opt
+    N
 %%
 
 /*table*/
@@ -103,30 +104,49 @@ change_table:   {
                     emit(FUNC, table_name, NULL, NULL);
                     printf("change_table - table changed\n");
                 }
+                ;
+
+M:  {   
+        $$ = statCreate();
+        $$->nextlist = newList(giveNextInstr());
+        printf("COUNTER AT M %d\n", giveNextInstr());
+        char *value = (char*)malloc(sizeof(char)*100);
+        sprintf(value, "%d", giveNextInstr());
+        emit(GOTO, "M", NULL, NULL);
+        printf("M - normal\n");
+    }
+    ;
+
+N: {    
+        printf("NNN COUNTER SET TO %d\n", giveNextInstr());
+        $$ = giveNextInstr();
+    }
+    ;
+    
 
 /*expressions*/
 
 primary_expression:
     IDENTIFIER              {   
-                                $$ = (Expression *)malloc(sizeof(Expression));
+                                $$ = exprCreate();
                                 $$->loc = $1;
                                 $$->isBoolean = false;
                                 
                                 printf("primary-expression - identifer found\n");
                             }
     | INTEGER_CONSTANT      {
-                                $$ = (Expression *)malloc(sizeof(Expression));
+                                $$ = exprCreate();
                                 $$->loc = gentemp();
-                                
-                                char *value = (char *)malloc(sizeof(char) * 10);
+                                char * value = (char*)malloc(sizeof(char)*100);
                                 sprintf(value, "%d", $1);
+                                
                                 $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, value, size_of_int, TEMP, 0, NULL);
                                 $$->isBoolean = false;
                                 emit(ASSIGN, $$->loc->name, value, NULL);
                                 printf("primary-expression - interger const\n");
                             }
     | CHARACTER_CONSTANT    {
-                                $$ = (Expression *)malloc(sizeof(Expression));
+                                $$ = exprCreate();
                                 $$->loc = gentemp();
                                 
                                 char *value = (char *)malloc(sizeof(char) * 10);
@@ -138,7 +158,7 @@ primary_expression:
                                 printf("primary-expression - char detected\n");
                             }
     | STRING_LITERAL        {
-                                $$ = (Expression *)malloc(sizeof(Expression));
+                                $$ = exprCreate();
                                 $$->loc = gentemp();
                                 
                                 char *value = (char *)malloc(sizeof(char) * 10);
@@ -151,6 +171,7 @@ primary_expression:
 
                             }
     | '(' expression ')'    {
+        
                                 $$ = $2;
                                 printf("primary-expression - (id)\n");    
                             }
@@ -163,26 +184,40 @@ postfix_expression:
                                                                     printf("postfix-expression - normal %s\n", $$->loc->name);
                                                                 }
     | postfix_expression '[' expression ']'                     {
-                                                                    $$ = (Expression *)malloc(sizeof(Expression));
+                                                                    $$ = exprCreate();
                                                                     $$->loc = $3->loc;
                                                                     $$->loc->arrayName = $1->loc->name; 
                                                                     $$->isArray = true;
                                                                     printf("postfix-expression - array\n");
                                                                 }
     | postfix_expression '(' argument_expression_list_opt ')'   {
-                                                                    $$ = (Expression *)malloc(sizeof(Expression));
+
+                                                                    $$ = exprCreate();
                                                                     
                                                                     if ($1->loc->nested_table == NULL){
                                                                         yyerror("Function not defined");
                                                                     }
-                                                                    $$->loc = gentemp();
-                                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $1->loc->type, NULL, $1->loc->size, TEMP, 0, NULL);
-                                                                    $$->loc->arrayName = $1->loc->name;
-                                                                    emit(CALL, $$->loc->name, $1->loc->name, NULL);
+
+                                                                    char* value = (char*)malloc(sizeof(char)*100);
+                                                                    if ($1->loc->type == TYPE_VOID){
+                                                                        sprintf(value, "%d", $3);
+                                                                        emit(CALL, NULL, $1->loc->name, value);
+                                                                        $$->loc = $1->loc;
+
+                                                                    }
+                                                                    else{
+                                                                        $$->loc = gentemp();
+                                                                        $$->loc = update_symboltable(current_table, $$->loc->name, $1->loc->type, NULL, $1->loc->size, TEMP, 0, NULL);
+                                                                        $$->loc->arrayName = $1->loc->name;
+                                                                        sprintf(value, "%d", $3);
+                                                                        emit(CALL, $$->loc->name, $1->loc->name, value);
+                                                                        printf("KANYE %d for %s\n", $1->loc->type, $1->loc->name);
+                                                                    }
                                                                     
+                                                                    printf("AAAAA %d %s\n", $1->loc->type, $1->loc->name);
                                                                     printf("postfix-expression - function\n");
                                                                 }
-    | postfix_expression ARROW IDENTIFIER                       {printf("postfix-expression\n");}
+    | postfix_expression ARROW IDENTIFIER                       /*no rules for this*/
     ;
 
 argument_expression_list_opt:
@@ -200,7 +235,7 @@ argument_expression_list:
                                                                 emit(PARAM, $1->loc->name, NULL, NULL);
                                                                 printf("argument-expression-list - param\n");
                                                             }
-    | argument_expression_list ',' assignment_expression    {
+    | argument_expression_list ',' assignment_expression    {   
                                                                 $$ = $1 + 1;
                                                                 emit(PARAM, $3->loc->name, NULL, NULL);
                                                                 printf("argument-expression-list - n-param\n");
@@ -213,7 +248,7 @@ unary_expression:
                                             printf("unary-expression - normal\n");
                                         }
     | unary_operator unary_expression   {
-                                            $$ = (Expression *)malloc(sizeof(Expression));
+                                            $$ = exprCreate();
                                             
                                             switch($1){
                                                 case '&':
@@ -227,10 +262,11 @@ unary_expression:
                                                 case '*':
                                                     $$->isPointer = true;
                                                     $$->loc = gentemp();
-                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $2->loc->type, NULL, $2->loc->size, TEMP, 0, $$->loc->name);
+                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $2->loc->type + TYPE_PTR, NULL, size_of_pointer, TEMP, 0, $$->loc->name);
                                                     $$->loc->arrayName = $2->loc->arrayName;
                                                     emit(PTR_ASSIGN, $$->loc->name, $2->loc->arrayName, NULL);
-                    
+                                                    printf("unary-expression - *\n");
+
                                                     break;
 
                                                 case '+':
@@ -249,8 +285,8 @@ unary_expression:
                                                 case '!':
                                                     if ($2->isBoolean){
                                                         $$->isBoolean = true;
-                                                        //copyArray($2->trueList, $$->falseList, MAXLIST);
-                                                        //copyArray($2->falseList, $$->trueList, MAXLIST);
+                                                        $$->truelist = $2->falselist;
+                                                        $$->falselist = $2->truelist;
                                                         $$->loc = $2->loc;
                                                         $$->loc->arrayName = $2->loc->arrayName;
                                                         printf("unary-expression - !\n");
@@ -261,7 +297,6 @@ unary_expression:
                                                     }
                                                     break;
                                             }
-                                            printf("unary-expression - unary\n");
                                         }
     ;
 
@@ -290,7 +325,7 @@ unary_operator:
 
 multiplicative_expression:
     unary_expression                                    {
-                                                            $$ = (Expression *)malloc(sizeof(Expression));
+                                                            $$ = exprCreate();
                                                             
                                                             if ($1->isArray){
                                                                 $$->loc = gentemp();
@@ -305,7 +340,7 @@ multiplicative_expression:
                                                             }
                                                             else{
                                                                 $$ = $1;
-                                                                
+                                                                //
                                                                 printf("multiplicative-expression - normal\n");
                                                             }
                                                         }
@@ -313,7 +348,7 @@ multiplicative_expression:
                                                             if ($1->loc->type != TYPE_INT || $3->loc->type != TYPE_INT){
                                                                 yyerror("Type mismatch");
                                                             }
-                                                            $$ = (Expression *)malloc(sizeof(Expression));
+                                                            $$ = exprCreate();
                                                             
                                                             $$->loc = gentemp();
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0, NULL);                                                            
@@ -325,7 +360,7 @@ multiplicative_expression:
                                                             if ($1->loc->type != TYPE_INT || $3->loc->type != TYPE_INT){
                                                                 yyerror("Type mismatch");
                                                             }
-                                                            $$ = (Expression *)malloc(sizeof(Expression));
+                                                            $$ = exprCreate();
                                                             $$->loc = gentemp();
                                                             
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0, NULL);                                                            
@@ -337,7 +372,7 @@ multiplicative_expression:
                                                             if ($1->loc->type != TYPE_INT || $3->loc->type != TYPE_INT){
                                                                 yyerror("Type mismatch");
                                                             }
-                                                            $$ = (Expression *)malloc(sizeof(Expression));
+                                                            $$ = exprCreate();
                                                             $$->loc = gentemp();
                                                             
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0, NULL);                                                            
@@ -356,7 +391,7 @@ additive_expression:
                                                             if ($1->loc->type != TYPE_INT || $3->loc->type != TYPE_INT){
                                                                yyerror("Type mismatch");
                                                             }
-                                                            $$ = (Expression *)malloc(sizeof(Expression));
+                                                            $$ = exprCreate();
                                                             $$->loc = gentemp();
                                                             
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0, NULL);
@@ -368,7 +403,7 @@ additive_expression:
                                                             if ($1->loc->type != TYPE_INT || $3->loc->type != TYPE_INT){
                                                                yyerror("Type mismatch");
                                                             }
-                                                            $$ = (Expression *)malloc(sizeof(Expression));
+                                                            $$ = exprCreate();
                                                             $$->loc = gentemp();
                                                             
                                                             $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, NULL, size_of_int, TEMP, 0, NULL);
@@ -383,10 +418,78 @@ relational_expression:
                                                                     $$ = $1;
                                                                     printf("relational-expression - normal\n");
                                                                 }
-    | relational_expression '<' additive_expression             {printf("relational-expression\n");}
-    | relational_expression '>' additive_expression             {printf("relational-expression\n");}
-    | relational_expression LESSTHANEQ additive_expression      {printf("relational-expression\n");}
-    | relational_expression GREATERTHANEQ additive_expression   {printf("relational-expression\n");}
+    | relational_expression '<' additive_expression             {
+                                                                    if ($1->loc->type != $3->loc->type){
+                                                                        yyerror("Type mismatch");
+                                                                    }
+                                                                    else{
+                                                                        $$ = exprCreate();
+                                                                        $$->loc = $1->loc;
+                                                                        $$->isBoolean = true;
+
+                                                                        $$->truelist = newList(giveNextInstr());
+
+                                                                        $$->falselist = newList(giveNextInstr()+1);
+
+                                                                        emit(LT, NULL, $1->loc->name, $3->loc->name);
+                                                                        emit(GOTO, "RE", NULL, NULL);
+                                                                    }
+                                                                    printf("relational-expression - LT\n");
+                                                                }
+    | relational_expression '>' additive_expression             {
+                                                                    if ($1->loc->type != $3->loc->type){
+                                                                        yyerror("Type mismatch");
+                                                                    }
+                                                                    else{
+                                                                        $$ = exprCreate();
+                                                                        $$->loc = $1->loc;
+                                                                        $$->isBoolean = true;
+
+                                                                        $$->truelist = newList(giveNextInstr());
+
+                                                                        $$->falselist = newList(giveNextInstr()+1);
+
+                                                                        emit(GT, "GT", $1->loc->name, $3->loc->name);
+                                                                        emit(GOTO, "RE", NULL, NULL);
+                                                                    }
+                                                                    printf("relational-expression - GT\n");
+                                                                }
+    | relational_expression LESSTHANEQ additive_expression      {
+                                                                    if ($1->loc->type != $3->loc->type){
+                                                                        yyerror("Type mismatch");
+                                                                    }
+                                                                    else{
+                                                                        $$ = exprCreate();
+                                                                        $$->loc = $1->loc;
+                                                                        $$->isBoolean = true;
+
+                                                                        $$->truelist = newList(giveNextInstr());
+
+                                                                        $$->falselist = newList(giveNextInstr()+1);
+
+                                                                        emit(LTE, "", $1->loc->name, $3->loc->name);
+                                                                        emit(GOTO, "RE", NULL, NULL);
+                                                                    }
+                                                                    printf("relational-expression - LTE\n");
+                                                                }
+    | relational_expression GREATERTHANEQ additive_expression   {
+                                                                    if ($1->loc->type != $3->loc->type){
+                                                                        yyerror("Type mismatch");
+                                                                    }
+                                                                    else{
+                                                                        $$ = exprCreate();
+                                                                        $$->loc = $1->loc;
+                                                                        $$->isBoolean = true;
+
+                                                                        $$->truelist = newList(giveNextInstr());
+
+                                                                        $$->falselist = newList(giveNextInstr()+1);
+
+                                                                        emit(GTE, "", $1->loc->name, $3->loc->name);
+                                                                        emit(GOTO, "RE", NULL, NULL);
+                                                                    }
+                                                                    printf("relational-expression - GTE\n");
+                                                                }
     ;
 
 equality_expression:
@@ -394,8 +497,51 @@ equality_expression:
                                                         $$ = $1;
                                                         printf("equality-expression - normal\n");
                                                     }
-    | equality_expression EQ relational_expression  {printf("equality-expression\n");}
-    | equality_expression NEQ relational_expression {printf("equality-expression\n");}
+    | equality_expression EQ relational_expression  {
+                                                        if ($1->loc->type != $3->loc->type){
+                                                            yyerror("Type mismatch");
+                                                        }
+                                                        else{
+                                                            boolToInt($1);
+                                                            boolToInt($3);
+
+                                                            $$ = exprCreate();
+                                                            $$->loc = $1->loc;
+                                                            $$->isBoolean = true;
+
+                                                            $$->truelist = newList(giveNextInstr());
+
+                                                            $$->falselist = newList(giveNextInstr()+1);
+
+                                                            emit(EQUAL, "", $1->loc->name, $3->loc->name);
+                                                            emit(GOTO, "EQEXP", NULL, NULL);
+
+                                                        }
+                                                        printf("equality-expression - EQ\n");
+                                                    }
+    | equality_expression NEQ relational_expression {
+                                                        if ($1->loc->type != $3->loc->type)
+                                                        {
+                                                            yyerror("Type mismatch");
+                                                        }
+                                                        else{
+                                                            boolToInt($1);
+                                                            boolToInt($3);
+
+                                                            $$ = exprCreate();
+                                                            $$->loc = $1->loc;
+                                                            $$->isBoolean = true;
+
+                                                            $$->truelist = newList(giveNextInstr());
+
+                                                            $$->falselist = newList(giveNextInstr()+1);
+
+                                                            emit(NE, "", $1->loc->name, $3->loc->name);
+                                                            emit(GOTO, "EQEXP", NULL, NULL);
+                                                        }
+
+                                                        printf("equality-expression - NE\n");
+                                                    }
     ;
 
 logical_and_expression:
@@ -403,7 +549,22 @@ logical_and_expression:
                                                                 $$ = $1;
                                                                 printf("logical-AND-expression - normal\n");
                                                             }
-    | logical_and_expression LOGICALAND equality_expression {printf("logical-AND-expression\n");}
+    | logical_and_expression LOGICALAND N equality_expression {
+                                                                
+                                                                intToBool($4);
+                                                                intToBool($1);
+                                                                
+                                                                $$ = exprCreate();
+                                                                $$->loc = $1->loc;
+                                                                $$->isBoolean = true;
+
+                                                                backpatch($1->truelist, $3);
+
+                                                                $$->truelist = $4->truelist;
+                                                                
+                                                                $$->falselist = merge($1->falselist, $4->falselist);
+                                                                printf("logical-AND-expression - using AND\n");
+                                                            }
     ;
 
 logical_or_expression:
@@ -411,20 +572,66 @@ logical_or_expression:
                                                                     $$ = $1;
                                                                     printf("logical-OR-expression - normal\n");
                                                                 }
-    | logical_or_expression LOGICALOR logical_and_expression    {printf("logical-OR-expression\n");}
+    | logical_or_expression LOGICALOR N logical_and_expression    {
+                                                                    intToBool($4);
+                                                                    intToBool($1);
+
+                                                                    $$ = exprCreate();
+                                                                    $$->loc = $1->loc;
+                                                                    $$->isBoolean = true;
+
+                                                                    backpatch($1->falselist, $3);
+
+                                                                    $$->truelist = merge($1->truelist, $4->truelist);
+                                                                    $$->falselist = $4->falselist;
+                                                                    printf("logical-OR-expression - using OR\n");
+                                                                }
     ;
 
 conditional_expression:
     logical_or_expression                                               {
                                                                             $$ = $1;
+                                                                            printf("%s >> %d\n", $$->loc->name, $$->loc->type);
                                                                             printf("conditional-expression - normal\n");
                                                                         }
-    | logical_or_expression '?' expression ':' conditional_expression   {printf("conditional-expression\n");}
+    | logical_or_expression M '?' N expression M ':' N conditional_expression   {
+                                                                                    $$->loc = gentemp();
+                                                                                    $$->loc = update_symboltable(current_table, $$->loc->name, $5->loc->type, NULL, $1->loc->size, TEMP, 0, NULL);
+                                                                                    printf("%s >>>> %d\n", $$->loc->name, $$->loc->type);
+                                                                                    
+                                                                                    emit(ASSIGN, $$->loc->name, $9->loc->name, NULL);
+
+                                                                                    List *t = newList(giveNextInstr());
+
+                                                                                    emit(GOTO, "ConExp", NULL, NULL);
+
+                                                                                    backpatch($6->nextlist, giveNextInstr());
+
+                                                                                    emit(ASSIGN, $$->loc->name, $5->loc->name, NULL);
+
+                                                                                    List *l = newList(giveNextInstr());
+
+                                                                                    l = merge(l, t);
+
+                                                                                    emit(GOTO, "ConExp", NULL, NULL);
+
+                                                                                    backpatch($2->nextlist, giveNextInstr());
+
+                                                                                    intToBool($1);
+                                                                                    backpatch($1->truelist, $4);
+                                                                                    backpatch($1->falselist, $8);
+
+                                                                                    backpatch(l, giveNextInstr());
+
+                                                                                    printf("conditional-expression\n");
+                                                                                }
     ;
 
 assignment_expression:
     conditional_expression                          {
                                                         $$ = $1;
+                                                        printf("%s >>> %d\n", $$->loc->name, $$->loc->type);
+
                                                         printf("assignment-expression - normal\n");
                                                     }
     | unary_expression '=' assignment_expression    {
@@ -509,25 +716,39 @@ init_declarator:
 type_specifier:
     VOID    {
                 push(&dTypeStack, voidType);
-                printf("type-specifier VOID - type %d and size %d\n", voidType.type, voidType.size);
+                printf("type-specifier VOID\n");
             }
     | CHAR  {
                 push(&dTypeStack, charType);
-                printf("type-specifier CHAR - type %d and size %d\n", charType.type, charType.size);
+                printf("type-specifier CHAR\n");
             }
     | INT   {
                 push(&dTypeStack, intType);
-                printf("type-specifier INT- type %d and size %d\n", intType.type, intType.size);
+                printf("type-specifier INT\n");
             }
     ;
 
 declarator:
     pointer direct_declarator       {
                                         if ($2->nested_table != NULL){
+                                            
+                                            $$ = $2;
+                                            printf("FUNCTION TYPE: %s\n", $$->name);
+                                            int type = $$->type;
+                                            $$->type = type - TYPE_PTR;
+                                            $$->size = size_of_pointer;
+                                            
+                                            if ($$->type != TYPE_VOID){
+                                                symbol *RV = symlook($$->nested_table, "retVal");
+                                                RV = update_symboltable($$->nested_table, RV->name, $$->type, 0, $$->size, LOCAL, 0, NULL);
+                                            }
                                             printf("Implement for function\n");
+
                                         }
                                         else{
                                             $$ = $2;
+                                            //$$->arraySize = 1;
+                                            //$$->arrayName = $2->arrayName; // not sure if that would be array or not
                                             $$->type = $$->type - TYPE_PTR;
                                             $$->size = size_of_pointer;
                                             printf("declarator - pointer and %d\n", $$->type);
@@ -539,14 +760,9 @@ declarator:
                                     }
     ;
 
-pointer_opt:
-    pointer
-    |
-    ;
-
 direct_declarator:
     IDENTIFIER                                          {   
-                                                            $$ = (symbol *)malloc(sizeof(symbol));
+                                                            $$ = create_symbol();
                                                             data_type dType = pop(&dTypeStack);
                                                             printf("Checking for: %s\n", $1->name);
                                                             if (current_table != global_table){
@@ -559,7 +775,7 @@ direct_declarator:
                                                             printf("direct-declarator - %s\n", $$->name);
                                                         }
     | IDENTIFIER '['INTEGER_CONSTANT']'                 {   
-                                                            $$ = (symbol *)malloc(sizeof(symbol));
+                                                            $$ = create_symbol();
                                                             data_type dType = pop(&dTypeStack);
                                                             printf("Checking for: %s\n", $1->name);
                                                             if (current_table != global_table){
@@ -576,11 +792,13 @@ direct_declarator:
                                                             table_name = strdup($1->name);
                                                             data_type dType = pop(&dTypeStack);
                                                             $1 = update_symboltable(global_table, $1->name, dType.type, 0, 0, FUNCTION, 0, NULL);
+                                                            print_all_ST();
+                                                            printf("LO for: %s == %d\n", $1->name, $1->type);
 
                                                             if (dType.type != TYPE_VOID){
                                                                 //print_symboltable(current_table);
                                                                 symbol *RV = symlook(current_table, "retVal");
-                                                                RV = update_symboltable(current_table, RV->name, dType.type, 0, dType.size, LOCAL, 0, NULL);
+                                                                RV = update_symboltable(current_table, RV->name, $1->type, 0, dType.size, LOCAL, 0, NULL);
                                                             }
                                                             $1->nested_table = current_table;
                                                             table_pointer = current_table;
@@ -633,11 +851,6 @@ parameter_declaration:
                                             }
     ;
 
-identifier_opt:
-    IDENTIFIER
-    |
-    ;
-
 initializer:
     assignment_expression   {   
                                 $$ = $1->loc;
@@ -648,14 +861,23 @@ initializer:
 /*statements*/
 
 statement:
-    compound_statement      {printf("statement\n");}
+    compound_statement      {   
+                                $$ = $1;
+                                printf("statement - normal compound\n");
+                            }
     | expression_statement  {
-                                $$ = (Statement *)malloc(sizeof(Statement));
+                                $$ = statCreate();
                                 $$->nextlist = $1->nextlist;
                                 printf("statement COME BACK\n");
                             }
-    | selection_statement   {printf("statement\n");}
-    | iteration_statement   {printf("statement\n");}
+    | selection_statement   {
+                                $$ = $1;
+                                printf("statement - selection\n");
+                            }
+    | iteration_statement   {
+                                $$ = $1;
+                                printf("statement\n");
+                            }
     | jump_statement        {
                                 $$ = $1;
                                 printf("statement - jumped\n");
@@ -675,7 +897,7 @@ block_item_list_opt:
                         printf("block-item-list-opt - normal\n");
                     }
     |               {
-                        
+                        $$ = statCreate();
                         printf("block-item-list-opt - empty\n");
                     }
     ;
@@ -685,18 +907,17 @@ block_item_list:
                                         $$ = $1;
                                         printf("block-item-list - normal\n");
                                     }
-    | block_item_list block_item    {
-                                        $$ = $2;
-
-                                        backpatch($1->nextlist, next_instr);
+    | block_item_list N block_item    {
+                                        $$ = $3;
+                                        printf("WHAT THIS; %d\n" , $2);
+                                        backpatch($1->nextlist, $2);
                                         printf("block-item-list - backpatch\n");
                                     }
     ;
 
 block_item:
     declaration {
-                    $$ = (Statement *)malloc(sizeof(Statement));
-                    
+                    $$ = statCreate();                    
                     printf("block-item - declaration\n");
                 }
     | statement {
@@ -711,7 +932,7 @@ expression_statement:
                         printf("expression-statement - incomp\n");
                     }
     | ';'           {
-                        $$ = (Expression *)malloc(sizeof(Expression));
+                        $$ = exprCreate();
                         printf("expression-statement - null\n");
                     }
     ;
@@ -722,36 +943,94 @@ expression_opt:
                     printf("expression-opt - normal\n");
                 }
     |           {
-                    //$$ = NULL;
+                    $$ = exprCreate();
+                    $$->nextlist = newList(-1); // a checker if expression is null
                     printf("expression-opt - null\n");
                 }
     ;
 
 selection_statement:
-    IF '(' expression ')' statement                     {printf("selection-statement\n");}
-    | IF '(' expression ')' statement ELSE statement    {printf("selection-statement\n");}
+    IF '(' expression M ')' N statement M                   {  
+                                                                backpatch($4->nextlist, giveNextInstr());
+                                                                printf("COUNTER AT IF %d\n", giveNextInstr());
+                                                                $3 = intToBool($3);
+                                                                $$ = statCreate();
+                                                                printf("WHAY THIS %d\n", $6);
+                                                                backpatch($3->truelist, $6);
+
+                                                                List *t = merge($3->falselist, $7->nextlist);
+
+                                                                $$->nextlist = merge($8->nextlist, t);
+
+                                                                printf("selection-statement - ongoing\n");
+                                                            }
+    | IF '(' expression M ')' N statement M ELSE N statement   {
+                                                                printList($4->nextlist);
+                                                                backpatch($4->nextlist, giveNextInstr());
+                                                                intToBool($3);
+
+                                                                $$ = statCreate();
+
+                                                                printList($3->truelist);
+                                                                printList($3->falselist);
+
+                                                                backpatch($3->truelist, $6);
+                                                                backpatch($3->falselist, $10);
+
+                                                                printf("COUNTER AT ELSE %d\n", giveNextInstr());
+                                                                printList($7->nextlist);
+                                                                printList($8->nextlist);
+                                                                printList($11->nextlist);
+
+                                                                List *t = merge($7->nextlist, $8->nextlist);
+
+                                                                printList(t);
+                                                                $$->nextlist = merge($11->nextlist, t);
+                                                                printf("selection-statement\n");
+                                                            }
     ;
 
 iteration_statement:
-    FOR '(' expression_opt ';' expression_opt ';' expression_opt ')' statement  {printf("iteration-statement\n");}
+     FOR '(' expression_opt ';' N expression_opt ';' N expression_opt M ')' N statement  
+    {   
+        $$ = statCreate();
+        if ($6->nextlist != NULL){ 
+            // missing the middle expression, making it while loop
+            backpatch($10->nextlist, $12);
+            backpatch($13->nextlist, $8);
+            char *value = (char*)malloc(sizeof(char)*100);
+            sprintf(value, "%d", $5);
+            emit(GOTO, value, NULL, NULL);
+        }
+        else{
+            intToBool($6);
+            backpatch($6->truelist, $12);
+            backpatch($10->nextlist, $5);
+            backpatch($13->nextlist, $8);
+            char *value = (char*)malloc(sizeof(char)*100);
+            sprintf(value, "%d", $8);
+            emit(GOTO, value, NULL, NULL);
+            $$->nextlist = $6->falselist;
+        }
+        printf("iteration-statement - normal\n");
+    }    
     ;
 
 jump_statement:
     RETURN expression ';'       {
                                     symbol *RV = searchTable(current_table, "retVal");
-                                    if (RV == NULL){
+
+                                    if ($2->loc->type != RV->type){
+                                        printf("Type mismatch %d and %d\n", $2->loc->type, RV->type);
                                         yyerror("Return value mismatch.");
                                     }
                                     else{
-                                        if ($2->loc->type != RV->type){
-                                            yyerror("Return value mismatch.");
-                                        }
-                                        else{
-                                            $$ = (Statement *)malloc(sizeof(Statement));
-                                            
-                                            emit(RET, $2->loc->name, NULL, NULL);
-                                        }
+
+                                        $$ = statCreate();
+                                        emit(RET, $2->loc->name, NULL, NULL);
+                                        
                                     }
+                                    
                                     printf("jump-statement - to change\n");
                                 }
     | RETURN ';'                {   
@@ -760,7 +1039,7 @@ jump_statement:
                                         yyerror("Return value mismatch. Type not VOID");
                                     }
                                     else{
-                                        $$ = (Statement *)malloc(sizeof(Statement));
+                                        $$ = statCreate();
                                         
                                         emit(RET, "", NULL, NULL);
                                         printf("jump-statement - null to change\n");
@@ -781,7 +1060,21 @@ external_declaration:
 function_definition:
     type_specifier declarator change_table compound_statement   {
                                                                     table_pointer = NULL;
+                                                                    
+                                                                    //if ($2->type == TYPE_VOID){
+                                                                    //    backpatch($4->nextlist, giveNextInstr()-1);
+                                                                    //}
+                                                                    //else{
+                                                                    //    backpatch($4->nextlist, giveNextInstr());
+                                                                    //}
+                                                                    
+                                                                    
+                                                                    printf("CHECK AT FUNC %d\n", giveNextInstr());
+                                                                    printList($4->nextlist);
+                                                                    backpatch($4->nextlist, giveNextInstr());
                                                                     emit(FUNC_END, table_name, NULL, NULL);
+
+
                                     
                                                                     current_table = global_table;
                                                                     printf("function-definition - normal\n");
