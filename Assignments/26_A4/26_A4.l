@@ -62,7 +62,6 @@ WHITESPACE  [ \s\t\n]
 
 {IDENTIFIER}            {
                             yylval.symp = symlook(current_table, yytext);
-                            printf("-->Token: %s\n", yylval.symp->name);
                             return IDENTIFIER;
                         }
 
