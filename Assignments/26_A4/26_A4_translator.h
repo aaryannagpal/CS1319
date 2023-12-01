@@ -102,7 +102,7 @@ typedef struct exp{
 	List *nextlist; // for statement references
 
 }Expression;
-Expression* newExpression();
+Expression* exprCreate();
 
 typedef struct stat{
 	List *nextlist;
@@ -162,8 +162,8 @@ void copyArray(int *dest, int *src, int size);
 void backpatch(List *list, int instr);
 void printList(List *stmlist);
 
-Expression *convertBoolToInt(Expression *e);
-Expression *convertIntToBool(Expression *e);
+Expression *boolToInt(Expression *e);
+Expression *intToBool(Expression *e);
 List *merge(List *list1, List *list2);
 
 void makeTAC();
