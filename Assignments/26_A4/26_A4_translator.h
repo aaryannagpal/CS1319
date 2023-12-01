@@ -27,7 +27,7 @@ typedef enum{
 	TYPE_VOID_PTR = -3,
 	TYPE_INT_PTR,
 	TYPE_CHAR_PTR,
-	TYPE_VOID,
+	TYPE_VOID, //0
 	TYPE_INT,
 	TYPE_CHAR,
 	TYPE_PTR,
@@ -54,9 +54,10 @@ typedef struct sym {
 	// symboltable *nested_table;
 	struct sym *nested_table;
 	struct sym *next;
-	int arraySize;
+	int arraySize; 
 	char *arrayName;
 }symbol;
+symbol* create_symbol();
 
 // something for parameter list
 
@@ -101,7 +102,7 @@ typedef struct LL{
 	int instr;
 	struct LL *next;
 }List;
-
+List* newList(int next_instr);
 	
 
 typedef struct exp{
@@ -115,10 +116,13 @@ typedef struct exp{
 	List *nextlist; // for statement references
 
 }Expression;
+Expression* newExpression();
 
 typedef struct stat{
 	List *nextlist;
 }Statement;
+
+Statement* statCreate();
 
 
 typedef enum {
@@ -129,6 +133,12 @@ typedef enum {
 	DIV,
 	MOD,
 
+	EQUAL, //==
+	NE, //!=
+	GT, //>
+	LT, //<
+	GTE, //>=
+	LTE, //<=
 	
 	ADDR,
 	PTR_ASSIGN,
@@ -152,17 +162,26 @@ typedef struct quad_tag {
 	char *result, *arg1, *arg2;
 } quad;
 
+quad* newQuad();
+
 extern quad *QuadArray[MAXQARRAY];
+int giveNextInstr();
 
 void emit(opcodeType op, char *result, char *arg1, char *arg2);
 void print_quad_array();
 
-static int next_instr = 0;
+static int next_instr= 0;
+
 void copyArray(int *dest, int *src, int size);
 void backpatch(List *list, int instr);
 void printList(List *stmlist);
 
+Expression *convertBoolToInt(Expression *e);
+Expression *convertIntToBool(Expression *e);
+List *merge(List *list1, List *list2);
 
+void makeTAC();
+void print_all_ST();
 
 // quad *new_quad_binary(opcodeType op1, char *s1, char *s2, char *s3);
 
