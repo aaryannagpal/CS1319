@@ -6,6 +6,21 @@
 extern void yyerror(char *s);
 extern int yyparse();
 
+symbol* create_symbol(){
+    symbol *symb = (symbol *)malloc(sizeof(symbol));
+    symb->name = NULL;
+    symb->type = 0;
+    symb->value = NULL;
+    symb->size = 0;
+    symb->offset = 0;
+    symb->category = NONE;
+    symb->nested_table = NULL;
+    symb->next = NULL;
+    symb->arraySize = 0;
+    symb->arrayName = NULL;
+    return symb;
+}
+
 
 symbol *create_symboltable(){
     symbol *table = (symbol *)malloc(sizeof(symbol));
@@ -24,18 +39,18 @@ symbol *create_symboltable(){
 symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category, int arraySize, char *arrayName){
     // symbol *symb = table;
     symbol *temp = table;
-    printf("\n\n");
-    printf("-->Updating symbol table entry for %s\n", name);
-    printf("\n\n");
+    
+    // printf("-->Updating symbol table entry for %s\n", name);
+    
     while(temp != NULL){
-        printf("==>Comparing %s\n", temp->name);
+        // printf("==>Comparing %s\n", temp->name);
         if(strcmp(temp->name, name) == 0){
-            printf("-->Found symbol table entry for %s\n", temp->name);
+            // printf("-->Found symbol table entry for %s\n", temp->name);
             temp->type = type;
-            printf("-->Value already present\n");
+            // printf("-->Value already present\n");
             switch(type){
                 case TYPE_INT:
-                    printf("-->Int type\n");
+                    // printf("-->Int type\n");
                     temp->value = value;
                     // *(int*)temp->value = atoi(value);
                     break;
@@ -43,42 +58,15 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
                     temp->value = value;
                     break;
                 case TYPE_PTR:
-                    printf("-->Pointer type\n");
+                    // printf("-->Pointer type\n");
                     temp->value = &value;
                     break;
-                // case TYPE_VOID:
-                //     temp->value = NULL;
-                //     break;
-                // case TYPE_VOID_PTR:
-                //     temp->value = (void*)malloc(sizeof(void*));
-                //     *(void**)temp->value = NULL;
-                //     break;
-                // case TYPE_INT_PTR:
-                //     temp->value = (void*)malloc(sizeof(int*));
-                //     *(int**)temp->value = NULL;
-                //     break;
-                // case TYPE_CHAR_PTR:
-                //     temp->value = (void*)malloc(sizeof(char*));
-                //     *(char**)temp->value = NULL;
-                //     break;
             }
-            // temp->value = value;
-            // if (table != global_table){
-            //     if (arraySize > 0){
-            //         temp->size = size * arraySize;
-            //     }
-            //     else{
-            //         temp->size = size;
-            //     }
-            // }
-            // else{
-            //     temp->size = size;
-            // }
             temp->size = size;
             temp->category = category;
             temp->arraySize = arraySize;
             temp->arrayName = arrayName;
-            printf("-->Array size: %d\n", temp->arraySize);
+            printf("-->Updated %s\n", temp->name);
             
             // table = temp;
             // print_symboltable(table);
@@ -86,38 +74,38 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
         }
         temp = temp->next;
     }
-    printf("-->Symbol table entry for %s not found.\n", name);
+    // printf("-->Symbol table entry for %s not found.\n", name);
 }
 
 symbol *searchTable(symbol *table, char *name){
     symbol *temp = table;
     
     if (temp == NULL){
-        printf("-->Table empty therefore %s not found.\n", name);
+        // printf("-->Table empty therefore %s not found.\n", name);
         return NULL;
     }
 
     else{
         if (temp->name == NULL){
-            printf("-->Void Table empty therefore %s not found.\n", name);
+            // printf("-->Void Table empty therefore %s not found.\n", name);
             return NULL;
         }
     }
 
     while(temp->next != NULL){
         if(strcmp(temp->name, name) == 0){
-            printf("-->Found symbol table entry for %s\n", temp->name);
+            // printf("-->Found symbol table entry for %s\n", temp->name);
             return temp;
         }
         temp = temp->next;
     }
     
     if (strcmp(temp->name, name) == 0){
-        printf("-->Found symbol table entry for %s\n", temp->name);
+        // printf("-->Found symbol table entry for %s\n", temp->name);
         return temp;
     }
 
-    printf("-->Symbol table entry for %s not found.\n", name);
+    // printf("-->Symbol table entry for %s not found.\n", name);
     return NULL;
 }
 
@@ -130,16 +118,16 @@ symbol *symlook(symbol *table, char *name){
         symb->name = strdup(name);
         // symb->name = name;
         table = symb;
-        printf("\n\n");
-        printf("-->Created first symbol table entry for %s\n", name);
-        // print_symboltable(table);
-        printf("\n\n");
+        // printf("\n\n");
+        // // printf("-->Created first symbol table entry for %s\n", name);
+        // // print_symboltable(table);
+        // printf("\n\n");
         return table;
     }
-    printf("-->Table not empty! Moving on:\n");
+    // printf("-->Table not empty! Moving on:\n");
     while(symb->next != NULL){
         if(strcmp(symb->name, name) == 0){
-            printf("-->Found symbol table entry for %s\n", name);
+            // printf("-->Found symbol table entry for %s\n", name);
             // print_symboltable(symb);
             return symb;
         }
@@ -147,7 +135,7 @@ symbol *symlook(symbol *table, char *name){
     }
 
     if (strcmp(symb->name, name) == 0){
-        printf("-->Found symbol table entry for %s\n", name);
+        // printf("-->Found symbol table entry for %s\n", name);
         // print_symboltable(symb);
         return symb;
     }
@@ -160,23 +148,23 @@ symbol *symlook(symbol *table, char *name){
         // symb->name = name;
         table = temp;
         printf("\n\n");
-        printf("-->Created first global symbol table entry for %s\n", name);
+        // printf("-->Created first global symbol table entry for %s\n", name);
         // print_symboltable(table);
         printf("\n\n");
         return table;
     }
-    printf("-->Global table not empty! Moving on:\n");
+    // printf("-->Global table not empty! Moving on:\n");
     while(temp->next != NULL){
         printf("==>Comparing %s\n", temp->name);
         if(strcmp(temp->name, name) == 0){
-            printf("-->Found global symbol table entry for %s\n", name);
+            // printf("-->Found global symbol table entry for %s\n", name);
             // print_symboltable(symb);
             return temp;
         }
         temp = temp->next;
     }
     if (strcmp(temp->name, name) == 0){
-        printf("-->Found global symbol table entry for %s\n", name);
+        // printf("-->Found global symbol table entry for %s\n", name);
         // print_symboltable(symb);
         return temp;
     }
@@ -184,7 +172,7 @@ symbol *symlook(symbol *table, char *name){
 
 
 
-    printf("-->Symbol table entry for %s not found. Creating new local entry\n", name);
+    // printf("-->Symbol table entry for %s not found. Creating new local entry\n", name);
     printf("%s\n", name);
     symbol *new = (symbol *)malloc(sizeof(symbol));
     new->name = strdup(name);
@@ -385,7 +373,7 @@ symbol *gentemp(){//data_type type, void *value){
     sprintf(name, "t%d", count++);
     symbol *temp = symlook(current_table, name);
     temp->category = TEMP;
-    // printf("Created temporary %s\n", name);
+    printf("Created temporary %s\n", name);
     // temp->type = type.type;
     // temp->size = type.size;
     // temp->value = (void*)value;
@@ -401,13 +389,20 @@ char *table_name = NULL;
 
 // QuadArray *quadArray;
 
-quad *QuadArray[MAXQARRAY];
+quad* newQuad(){
+    quad *new = (quad *)malloc(sizeof(quad));
+    new->op = 0;
+    new->result = NULL;
+    new->arg1 = NULL;
+    new->arg2 = NULL;
+    return new;
+}   
 
-static int next_instr;
+quad *QuadArray[MAXQARRAY];
 
 void emit(opcodeType op, char *result, char *arg1, char *arg2){
 
-    quad *new = (quad *)malloc(sizeof(quad));
+    quad *new = newQuad();
     if (new == NULL){
         printf("-->Error creating quad\n");
     }
@@ -415,25 +410,37 @@ void emit(opcodeType op, char *result, char *arg1, char *arg2){
         printf("-->Emitting quad %s\n", result);
         
         new->op = op;
-        new->result = strdup(result);
-        new->arg1 = arg1;
-        new->arg2 = arg2;
+        if(result != NULL){
+            new->result = strdup(result);
+        }
+        if(arg1 != NULL){
+            new->arg1 = strdup(arg1);
+        }
+        if(arg2 != NULL){
+            new->arg2 = strdup(arg2);
+        }
         
         QuadArray[next_instr] = new;
         next_instr++;
+        printf("COUNTER INCREMENTED TO %d\n", next_instr);
+        makeTAC();
         // printf("Quad emitted %s\n", result);
         // print_quad_array();
         // print_symboltable(current_table);
+        // print_all_ST();
         return;
 }
 
+int giveNextInstr(){
+    return next_instr;
+}
 
 void print_quad_array(){
     printf("====================================================================\n");
     printf("Instr No.\t\tOp\t\t\t\tResult\t\t\tArg1\t\tArg2\n");
     printf("====================================================================\n");
         
-    for (int i = 0; i < next_instr; i++){
+    for (int i = 1; i < next_instr; i++){
         // printf("%p\t\t", QuadArray[i]);
         printf("%-5d\t\t\t", i);
         printf("%-5d\t\t\t", QuadArray[i]->op);
@@ -446,6 +453,127 @@ void print_quad_array(){
     printf("Printed\n\n");
 }
 
+void makeTAC(){
+    printf("\n====================================================================\n");
+    for (int i = 1; i < next_instr; i++){
+        printf("%-3d:\t", i);
+        switch(QuadArray[i]->op){
+            case ASSIGN:
+                printf("%s = %s\n", QuadArray[i]->result, QuadArray[i]->arg1);
+                break;
+            case PLUS:
+                printf("%s = %s + %s\n", QuadArray[i]->result, QuadArray[i]->arg1, QuadArray[i]->arg2);
+                break;
+            case MINUS:
+                printf("%s = %s - %s\n", QuadArray[i]->result, QuadArray[i]->arg1, QuadArray[i]->arg2);
+                break;
+            case MULT:
+                printf("%s = %s * %s\n", QuadArray[i]->result, QuadArray[i]->arg1, QuadArray[i]->arg2);
+                break;
+            case DIV:
+                printf("%s = %s / %s\n", QuadArray[i]->result, QuadArray[i]->arg1, QuadArray[i]->arg2);
+                break;
+            case MOD:
+                printf("%s = %s %% %s\n", QuadArray[i]->result, QuadArray[i]->arg1, QuadArray[i]->arg2);
+                break;
+            case EQUAL:
+                printf("if %s == %s goto %s\n", QuadArray[i]->arg1, QuadArray[i]->arg2, QuadArray[i]->result);
+                break;
+            case NE:
+                printf("if %s != %s goto %s\n", QuadArray[i]->arg1, QuadArray[i]->arg2, QuadArray[i]->result);
+                break;
+            case GT:
+                printf("if %s > %s goto %s\n", QuadArray[i]->arg1, QuadArray[i]->arg2, QuadArray[i]->result);
+                break;
+            case LT:
+                printf("if %s < %s goto %s\n", QuadArray[i]->arg1, QuadArray[i]->arg2, QuadArray[i]->result);
+                break;
+            case GTE:
+                printf("if %s >= %s goto %s\n", QuadArray[i]->arg1, QuadArray[i]->arg2, QuadArray[i]->result);
+                break;
+            case LTE:
+                printf("if %s <= %s goto %s\n", QuadArray[i]->arg1, QuadArray[i]->arg2, QuadArray[i]->result);
+                break;
+
+            case ADDR:
+                printf("%s = &%s\n", QuadArray[i]->result, QuadArray[i]->arg1);
+                break;
+            case PTR_ASSIGN:
+                printf("%s = *%s\n", QuadArray[i]->result, QuadArray[i]->arg1);
+                break;
+            case READIDX:
+                printf("%s = %s[%s]\n", QuadArray[i]->result, QuadArray[i]->arg1, QuadArray[i]->arg2);
+                break;
+            case WRITEIDX:
+                printf("%s[%s] = %s\n", QuadArray[i]->result, QuadArray[i]->arg1, QuadArray[i]->arg2);
+                break;
+            case UPLUS:
+                printf("%s = + %s\n", QuadArray[i]->result, QuadArray[i]->arg1);
+                break;
+            case UMINUS:
+                printf("%s = - %s\n", QuadArray[i]->result, QuadArray[i]->arg1);
+                break;
+            case NOT:
+                printf("%s = ! %s\n", QuadArray[i]->result, QuadArray[i]->arg1);
+                break;
+            case GOTO:
+                printf("goto %s\n", QuadArray[i]->result);
+                break;
+            case FUNC:
+                printf("FUNCTION %s\n", QuadArray[i]->result);
+                break;
+            case FUNC_END:
+                printf("END FUNCTION %s\n", QuadArray[i]->result);
+                // print_all_ST();
+                break;
+            case CALL:
+                if (QuadArray[i]->result != NULL){
+                    printf("%s = CALL %s, %s\n", QuadArray[i]->result, QuadArray[i]->arg1, QuadArray[i]->arg2);
+                }
+                else{
+                    printf("CALL %s, %s\n", QuadArray[i]->arg1, QuadArray[i]->arg2);
+                }
+                break;
+            case PARAM:
+                printf("PARAM %s\n", QuadArray[i]->result);
+                break;
+            case RET:
+                printf("RETURN %s\n", QuadArray[i]->result);
+                break;
+            default:
+                printf("\n");
+        }
+        printf("--------------------------------------------------------------------\n");
+        // print_all_ST();
+    }
+    printf("====================================================================\n\n");
+}
+
+List* newList(int next_instr){
+    List *new = (List *)malloc(sizeof(List));
+    new->instr = next_instr;
+    new->next = (List *)malloc(sizeof(List));
+    new->next->instr = -1;
+    new->next->next = NULL;
+    return new;
+}
+Expression* exprCreate(){
+    Expression *new = (Expression *)malloc(sizeof(Expression));
+    new->loc = NULL;
+    new->isArray = false;
+    new->isPointer = false;
+    new->isBoolean = false;
+    new->truelist = NULL;
+    new->falselist = NULL;
+    new->nextlist = NULL;
+    return new;
+}
+
+Statement* statCreate(){
+    Statement *new = (Statement *)malloc(sizeof(Statement));
+    new->nextlist = NULL;
+    return new;
+}
 
 
 data_type intType = {TYPE_INT, size_of_int};
@@ -459,7 +587,7 @@ void push(DataTypeStack *s, data_type dType){
     }
     else{
         s->items[++s->top] = dType;
-        printf("-->Pushed (%d)type to data type stack\n", dType.type);
+        // printf("-->Pushed (%d)type to data type stack\n", dType.type);
         return;
     }
 }
@@ -469,19 +597,12 @@ data_type pop(DataTypeStack *s){
         yyerror("-->Data Type Stack Underflow");
     }
     else{
-        printf("-->Popped %d from data type stack\n", s->items[s->top].type);
+        // printf("-->Popped %d from data type stack\n", s->items[s->top].type);
         return s->items[s->top--];
     }
 }
 
 DataTypeStack dTypeStack;
-
-void printArray(int *arr, int size){
-    for (int i = 0; i < size; i++){
-        printf("%d, ", arr[i]);
-    }
-    printf("\n");
-}
 
 void copyArray(int* dest, int* src, int size){
     for (int i = 0; i < size; i++){
@@ -489,22 +610,31 @@ void copyArray(int* dest, int* src, int size){
     }
 }
 
-void backpatch(List *stmList, int inst)
-{
+void backpatch(List *stmList, int inst) {
     List *temp = stmList;
-    while (temp != NULL)
-    {   
-        printf("-->Backpatching from %d\n", temp->instr);
-        if (temp->instr < 0){
-            printf("-->Backpatching %d\n", inst);
-            char inst_str[10];
-            sprintf(inst_str, "%d", inst);
-            QuadArray[temp->instr]->result = strdup(inst_str);
-        }
-        temp = temp->next;
+    if (temp == NULL){
+        // printf("BACKPATCH DENIED - List empty\n");
+        return;
     }
-	// return;
+    if (inst > 0) {
+        while (temp != NULL) {
+            // Check if the instruction is within the valid range of QuadArray
+            // printf("Backpatching %d ------> %d\n", inst, temp->instr);
+            if (temp->instr > 0 && temp->instr <= MAXQARRAY) {
+                char str[10];
+                sprintf(str, "%d", inst);
+                // printf("Backpatching %d ------> %d\n", inst, temp->instr);
+                QuadArray[temp->instr]->result = strdup(str);
+                // makeTAC();
+            } else {
+                // Handle out-of-bounds error
+                // printf("BACKPATCH DENIED: Invalid instruction index %d\n", temp->instr);
+            }
+            temp = temp->next;
+        }
+    }
 }
+
 
 List *addToList(List *stmList, int inst)
 {
@@ -537,6 +667,62 @@ void printList(List *stmList){
     printf("\n");
 }
 
+Expression *boolToInt(Expression *e){
+    printf("Checking if %s is boolean\n", e->loc->name);
+    if (e->isBoolean == true){
+        printf("It is boolean\n");
+        e->loc = gentemp();
+        e->loc->type = TYPE_INT;
+        e->loc->size = size_of_int;
+        e->loc->category = TEMP;
+
+        backpatch(e->truelist, giveNextInstr());
+        emit(ASSIGN, e->loc->name, "true", NULL);
+        char str[10];
+        sprintf(str, "%d", giveNextInstr()+1);
+
+        emit(GOTO, str, NULL, NULL);
+        backpatch(e->falselist, giveNextInstr());
+        emit(ASSIGN, e->loc->name, "false", NULL);
+    }
+    else{
+        printf("Already integer\n");
+    }
+    return e;
+}
+
+Expression *intToBool(Expression *e){
+    printf("Checking if %s is boolean\n", e->loc->name);
+    if (e->isBoolean == false){
+        printf("It is integer\n");
+        e->falselist = newList(giveNextInstr());
+        emit(EQUAL, "", e->loc->name, "0");
+
+        e->truelist = newList(giveNextInstr());
+        emit(GOTO, "", NULL, NULL);
+    }
+    else{
+        printf("Already boolean\n");
+    }
+    return e;
+}
+
+List *merge(List *list1, List *list2) {
+    List *temp = list1;
+    if (temp == NULL) {
+        return list2;
+    } 
+    if (list2 == NULL) {
+        return list1;
+    }
+    else {
+        while (temp->next != NULL || temp->instr != -1) {
+            temp = temp->next;
+        }
+        temp->next = list2;
+        return list1;
+    }
+}
 
 int main(){
 
@@ -548,15 +734,16 @@ int main(){
     // print_symboltable(current_table);
     dTypeStack.top = -1;
     printf("===Created data type stack===\n");
-    // next_instr = 0;
-    printf("===Instruction Number Set to 0===\n");
+    next_instr = 1;
+    printf("COUNTER at %d\n", giveNextInstr());
 
     yyparse();
     // print_symboltable(global_table);
     // print_symboltable(current_table);
     print_all_ST();
-    print_quad_array(QuadArray);
-    printf("%d\n", next_instr);
+    print_quad_array();
+    makeTAC();
+    printf("Next Instruction Number: %d\n", next_instr);
     // printf("%d\n", nextInstr);
 
     return 0;
