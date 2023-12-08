@@ -119,7 +119,7 @@ symbol *symlook(symbol *table, char *name){
     if (strcmp(symb->name, name) == 0){
         return symb;
     }
-    // searching global if not found in current table
+    /* searching global if not found in current table*/
     if (temp->name == NULL){ // First entry 
         temp->name = strdup(name);
         table = temp;
