@@ -1193,7 +1193,7 @@ yysyntax_error (char *yyresult, int yystate, int yychar)
       return yysize;
     }
 }
-#endif /* YYERROR_VERBOSE */
+#endif // YYERROR_VERBOSE
 
 
 /*-----------------------------------------------.
