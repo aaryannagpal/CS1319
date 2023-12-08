@@ -8,7 +8,7 @@ char printStr(char *s){
     return *s;
 }
 
-// Bubble Sort
+/* Bubble Sort */
 
 void swap(int *p, int *q);
 void readArray(int size);
