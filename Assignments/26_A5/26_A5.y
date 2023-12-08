@@ -1,7 +1,7 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
-    #include "26_A4_translator.h"
+    #include "26_A5_translator.h"
 
     extern int yylex();
 

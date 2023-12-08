@@ -2,8 +2,8 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <math.h>
-    #include "26_A4_translator.h"
-    #include "26_A4.tab.h"
+    #include "26_A5_translator.h"
+    #include "26_A5.tab.h"
     #include <string.h>
 
     extern YYSTYPE yylval;

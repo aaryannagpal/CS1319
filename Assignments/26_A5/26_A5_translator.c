@@ -1,4 +1,4 @@
-#include "26_A4_translator.h"
+#include "26_A5_translator.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -51,6 +51,17 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
                 case TYPE_PTR:
                     temp->value = &value;
                     break;
+                case TYPE_VOID:
+                    temp->value = value;
+                case TYPE_VOID_PTR:
+                    temp->value = &value;
+                    break;
+                case TYPE_INT_PTR:
+                    temp->value = &value;
+                    break;
+                case TYPE_CHAR_PTR:
+                    temp->value = &value;
+                    break;
             }
             temp->size = size;
             temp->category = category;
@@ -60,6 +71,7 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
         }
         temp = temp->next;
     }
+    return NULL;
 }
 
 symbol *searchTable(symbol *table, char *name){
@@ -514,11 +526,13 @@ void push(DataTypeStack *s, data_type dType){
 data_type pop(DataTypeStack *s){
     if (s->top == -1){
         yyerror("-->Data Type Stack Underflow");
+        return voidType;
     }
     else{
         return s->items[s->top--];
     }
 }
+
 
 DataTypeStack dTypeStack;
 

@@ -12,7 +12,7 @@ all: build
 translator: 26_A5.y 26_A5_translator.c 26_A5.l
 	bison -d 26_A5.y
 	flex -o lex.yy.c 26_A5.l
-	gcc 26_A5_translator.c 26_A5.tab.c lex.yy.c -lfl -Werror -o translator
+	gcc 26_A5_translator.c 26_A5.tab.c lex.yy.c -ll -Werror -o translator
 
 build: translator
 
