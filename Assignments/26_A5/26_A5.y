@@ -23,7 +23,7 @@
     int num;
 };
 
-//start symbol
+/*start symbol*/
 %start translation_unit
 
 /*terminals*/

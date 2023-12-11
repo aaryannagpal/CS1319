@@ -9,7 +9,7 @@
     extern YYSTYPE yylval;
 %}
 
-/* Regular Expression Definitions
+/* Regular Expression Definitions */
 CHAR        "char"
 ELSE        "else"
 FOR         "for"
