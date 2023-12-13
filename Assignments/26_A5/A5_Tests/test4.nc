@@ -1,6 +1,6 @@
 int fun(int n){
     if(n == 0) return n;
-    return sum(n-1) + n;
+    return fun(n-1) + n;
 }
 
 int main(){
