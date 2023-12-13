@@ -9,11 +9,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #define DSTACK 100
 #define MAXQARRAY 10000
 #define MAXLIST 100
 #define MAXTEMP 100
+#define MAX_AR_SIZE 600
+#define MAX_LABELS 600
+#define MAX_GLOBAL_VARS 600
 
 extern  char* yytext;
 extern  int yyparse();
@@ -35,8 +39,33 @@ typedef enum{
 	LOCAL,
 	PARAMETER,
 	FUNCTION,
-	TEMP
+	TEMP, 
+	RETVAL
 }enumcat;
+
+typedef struct hash{
+	char* key;
+	int value;
+	struct hash *next;
+}ARHash;
+
+typedef struct hashNode {
+    int key;
+    int value;
+	struct hashNode *next;
+}labelHash;
+
+
+typedef struct hashTable {
+	char *name;
+	bool value;
+	struct hashTable *next;
+}globVars;
+
+typedef struct pm{
+	char *para;
+	struct pm *next;
+}param_list;
 
 
 typedef struct sym {
@@ -50,6 +79,7 @@ typedef struct sym {
 	struct sym *next;
 	int arraySize; 
 	char *arrayName;
+	ARHash *ST_AR[MAX_AR_SIZE];
 }symbol;
 symbol* create_symbol();
 
@@ -113,6 +143,7 @@ Statement* statCreate();
 
 typedef enum {
 	ASSIGN = 1,
+	STR,
 	PLUS,
 	MINUS,
 	MULT,
@@ -166,7 +197,30 @@ Expression *boolToInt(Expression *e);
 Expression *intToBool(Expression *e);
 List *merge(List *list1, List *list2);
 
+unsigned int ARhash(char *str);
+void insertAR(ARHash *table[], char *key, int value);
+int searchAR(ARHash *table[], char *key);
+
+unsigned int labHash(int key);
+void insertLabel(labelHash *table[], int key, int value);
+bool searchLabel(labelHash *table[], int key);
+labelHash* getLabel(labelHash *table[], int key);
+
+unsigned int globHash(char *str);
+void insertGlob(globVars *table[], char *name, bool value);
+bool searchGlob(globVars *table[], char *name);
+
+param_list* para_init();
+param_list* para_pop(param_list *head);
+void para_push(param_list *head, char *para);
+
+void setOffset(symbol *table);
+
 void makeTAC();
 void print_all_ST();
+
+void AR(symbol *table);
+void genASM();
+void printAR(symbol *table);
 
 #endif // __PARSER_H
