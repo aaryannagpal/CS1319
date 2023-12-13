@@ -18,6 +18,7 @@
 #define MAX_AR_SIZE 600
 #define MAX_LABELS 600
 #define MAX_GLOBAL_VARS 600
+#define MAX_STRING_TABLE 600
 
 extern  char* yytext;
 extern  int yyparse();
