@@ -723,17 +723,23 @@ void insertAR(ARHash *table[], char *key, int value){
     table[hash] = new;
 }
 
-int searchAR(ARHash *table[], char *key){
-    if (key == NULL){
-        return 0;
-    }
-    int hash = ARhash(key);
-    ARHash *temp = table[hash];
-    while (temp != NULL){
-        if (strcmp(temp->key, key) == 0){
-            return temp->value;
+int searchAR(symbol* sym, char *key){
+    while(sym != NULL){
+        if (sym->nested_table != NULL){
+            return searchAR(sym->nested_table, key);
         }
-        temp = temp->next;
+        if (key == NULL){
+            return 0;
+        }
+        ARHash *temp = sym->ST_AR[ARhash(key)];
+        int hash = ARhash(key);
+        while (temp != NULL){
+            if (strcmp(temp->key, key) == 0){
+                return temp->value;
+            }
+            temp = temp->next;
+        }
+        sym = sym->next;
     }
     return 0;
 }
@@ -947,7 +953,7 @@ void genASM(){
                     printf("\t.type\t%s, @object\n", sym->name);
                     printf("\t.size\t%s, 4\n", sym->name);
                     printf("%s:\n", sym->name);
-                    printf("\t.int\t%d\n", atoi(sym->value));
+                    printf("\t.long\t%d\n", atoi(sym->value));
                 }
                 insertGlob(globalVars, sym->name, true);
             }
@@ -1015,8 +1021,8 @@ void genASM(){
         }
 
         else{
-            int offset = searchAR(current_table->ST_AR, result);
-            printf("\n\nOFFSETTTT -- result:%s -- %d\n\n", result, offset);
+            int offset = searchAR(current_table, result);
+            // printf("\n\nOFFSETTTT --     result:%s -- %d\n\n", result, offset);
             res_AR = (char *)malloc(sizeof(char)*15);
             sprintf(res_AR, "%d(%%rbp)", offset);
         }
@@ -1028,8 +1034,8 @@ void genASM(){
         }
 
         else{
-            int offset = searchAR(current_table->ST_AR, arg1);
-            printf("\n\nOFFSETTTT -- arg1:%s -- %d\n\n", arg1, offset);
+            int offset = searchAR(current_table, arg1);
+            // printf("\n\nOFFSETTTT -- arg1:%s -- %d\n\n", arg1, offset);
             arg1_AR = (char *)malloc(sizeof(char)*15);
             sprintf(arg1_AR, "%d(%%rbp)", offset);
         }
@@ -1041,8 +1047,8 @@ void genASM(){
         }
 
         else{
-            int offset = searchAR(current_table->ST_AR, arg2);
-            printf("\n\nOFFSETTTT -- arg2:%s -- %d\n\n", arg2, offset);
+            int offset = searchAR(current_table, arg2);
+            // printf("\n\nOFFSETTTT -- arg2:%s -- %d\n\n", arg2, offset);
             arg2_AR = (char *)malloc(sizeof(char)*15);
             sprintf(arg2_AR, "%d(%%rbp)", offset);
         }
@@ -1075,15 +1081,15 @@ void genASM(){
                 else{
                     printf("movl \t%s, %%eax\n", arg1_AR);
                     printf("movl \t%s, %%edx\n", arg2_AR);
-                    printf("\taddl \t%%eax, %%eax\n");
+                    printf("\taddl \t%%edx, %%eax\n");
                     printf("\tmovl \t%%eax, %s\n", res_AR);
                 }
             }
             else if (QuadArray[i]->op == MINUS){
                 printf("movl \t%s, %%eax\n", arg1_AR);
                 printf("movl \t%s, %%edx\n", arg2_AR);
-                printf("\tsubl \t%%eax, %%edx\n"); // CHECK
-                printf("\tmovl \t%%edx, %s\n", res_AR);
+                printf("\tsubl \t%%edx, %%eax\n"); // CHECK
+                printf("\tmovl \t%%eax, %s\n", res_AR);
             }
 
             else if (QuadArray[i]->op == MULT){
@@ -1223,9 +1229,9 @@ void genASM(){
                 quadIt = true;
             }
             else if(QuadArray[i]->op == PTR_ASSIGN){
-                printf("\tmovq\t%s, %%rax\n", arg1_AR);
-                printf("\tmovl\t(%%rax), %%eax\n");
-                printf("\tmovl\t%%eax, %s\n", res_AR);
+                printf("\tmovl\t%s, %%eax\n", res_AR);
+                printf("\tmovl\t%s, %%edx\n", arg1_AR);
+                printf("\tmovl\t%%edx, (%%eax)\n");
             }
             else if(QuadArray[i]->op == READIDX){
                 printf("%s = %s[%s]\n", result, arg1, arg2);
@@ -1240,7 +1246,7 @@ void genASM(){
                 }
                 else{
                     printf("\tmovl\t%s, %%ecx\n", arg2_AR);
-                    printf("\tmovl\t%d(%%rbp,%%rcx,4), %%eax\n", searchAR(current_table->ST_AR, arg1));
+                    printf("\tmovl\t%d(%%rbp,%%rcx,4), %%eax\n", searchAR(current_table, arg1));
                     printf("\tmovl\t%%eax, %s\n", res_AR);
                 }
             }
@@ -1258,7 +1264,7 @@ void genASM(){
                 else{
                     printf("\tmovl\t%s, %%eax\n", arg1_AR);
                     printf("\tmovl\t%s, %%edx\n", arg2_AR);
-                    printf("\tmovl\t%%edx, %d(%%rbp,%%rax,4)\n", searchAR(current_table->ST_AR, result));
+                    printf("\tmovl\t%%edx, %d(%%rbp,%%rax,4)\n", searchAR(current_table, result));
                 }
             }
             else if(QuadArray[i]->op == UMINUS){
@@ -1268,7 +1274,7 @@ void genASM(){
             }
             else if(QuadArray[i]->op == RET){
                 if(QuadArray[i]->result != NULL){
-                    printf("movl\t%s, %%eax\n", arg1_AR);
+                    printf("movl\t%s, %%eax\n", res_AR);
                 }
                 printf("\tjmp .LFE%d\n", labelCount);
             }
@@ -1277,36 +1283,35 @@ void genASM(){
                 int pc = 0;
                 // get paracount
                 while(pl != NULL){
-                    pc++;
+                    pc+=1;
                     pl = pl->next;
                 }
                 pl = head;
                 for(int i = 0; i < pc; i++){
-                    if(pc == 0){
-                        printf("movl\t%d(%%rbp), %%eax\n", searchAR(current_table->ST_AR, pl->para));
-                        printf("\tmovq\t%d(%%rbp), %%rdi\n", searchAR(current_table->ST_AR, pl->para));
+                    if(i == 0){
+                        printf("movl\t%d(%%rbp), %%eax\n", searchAR(current_table, pl->para));
+                        printf("\tmovq\t%d(%%rbp), %%rdi\n", searchAR(current_table, pl->para));
                     }
-                    else if (pc == 1){
-                        printf("movl\t%d(%%rbp), %%eax\n", searchAR(current_table->ST_AR, pl->para));
-                        printf("\tmovq\t%d(%%rbp), %%rsi\n", searchAR(current_table->ST_AR, pl->para));
+                    else if (i == 1){
+                        printf("movl\t%d(%%rbp), %%eax\n", searchAR(current_table, pl->para));
+                        printf("\tmovq\t%d(%%rbp), %%rsi\n", searchAR(current_table, pl->para));
                     }
-                    else if (pc == 2){
-                        printf("movl\t%d(%%rbp), %%eax\n", searchAR(current_table->ST_AR, pl->para));
-                        printf("\tmovq\t%d(%%rbp), %%rdx\n", searchAR(current_table->ST_AR, pl->para));
+                    else if (i == 2){
+                        printf("movl\t%d(%%rbp), %%eax\n", searchAR(current_table, pl->para));
+                        printf("\tmovq\t%d(%%rbp), %%rdx\n", searchAR(current_table, pl->para));
                     }
-                    else if (pc == 3){
-                        printf("movl\t%d(%%rbp), %%eax\n", searchAR(current_table->ST_AR, pl->para));
-                        printf("\tmovq\t%d(%%rbp), %%rcx\n", searchAR(current_table->ST_AR, pl->para));
+                    else if (i == 3){
+                        printf("movl\t%d(%%rbp), %%eax\n", searchAR(current_table, pl->para));
+                        printf("\tmovq\t%d(%%rbp), %%rcx\n", searchAR(current_table, pl->para));
                     }
                     else{
-                        printf("\tmovq\t%d(%%rbp), %%rdi\n", searchAR(current_table->ST_AR, pl->para));
+                        printf("\tmovq\t%d(%%rbp), %%rdi\n", searchAR(current_table, pl->para));
                     }
                 }
                 head = para_pop(head);
                 printf("\tcall\t%s\n", arg1);
-                if(result != NULL){
-                    printf("\tmovl\t%%eax, %s\n", res_AR);
-                }
+                printf("\tmovl\t%%eax, %s\n", res_AR);
+
             }
             else if(QuadArray[i]->op == FUNC){
                 printf("\t.globl\t%s\n", result);
@@ -1332,16 +1337,16 @@ void genASM(){
                 while(ps != NULL){
                     if(ps->category == PARAMETER){
                         if(pa_s == 0){
-                            printf("\tmovq\t%%rdi, %d(%%rbp)\n", searchAR(current_table->ST_AR, ps->name));
+                            printf("\tmovq\t%%rdi, %d(%%rbp)\n", searchAR(current_table, ps->name));
                         }
                         else if(pa_s == 1){
-                            printf("\tmovq\t%%rsi, %d(%%rbp)\n", searchAR(current_table->ST_AR, ps->name));
+                            printf("\tmovq\t%%rsi, %d(%%rbp)\n", searchAR(current_table, ps->name));
                         }
                         else if(pa_s == 2){
-                            printf("\tmovq\t%%rdx, %d(%%rbp)\n", searchAR(current_table->ST_AR, ps->name));
+                            printf("\tmovq\t%%rdx, %d(%%rbp)\n", searchAR(current_table, ps->name));
                         }
                         else if(pa_s == 3){
-                            printf("\tmovq\t%%rcx, %d(%%rbp)\n", searchAR(current_table->ST_AR, ps->name));
+                            printf("\tmovq\t%%rcx, %d(%%rbp)\n", searchAR(current_table, ps->name));
                         }
                         pa_s++;
                     }

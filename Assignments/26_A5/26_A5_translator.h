@@ -200,7 +200,7 @@ List *merge(List *list1, List *list2);
 
 unsigned int ARhash(char *str);
 void insertAR(ARHash *table[], char *key, int value);
-int searchAR(ARHash *table[], char *key);
+int searchAR(symbol* sym, char *key);
 
 unsigned int labHash(int key);
 void insertLabel(labelHash *table[], int key, int value);
