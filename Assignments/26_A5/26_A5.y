@@ -133,7 +133,7 @@ primary_expression:
                                 $$->loc = gentemp();
                                 char * value = (char*)malloc(sizeof(char)*10);
                                 sprintf(value, "%d", $1);
-                                $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, value, size_of_int, TEMP, 0, NULL);
+                                $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, strdup(value), size_of_int, TEMP, 0, NULL);
                                 $$->isBoolean = false;
                                 emit(ASSIGN, $$->loc->name, value, NULL);
                                 free(value);
