@@ -107,9 +107,7 @@ change_table:   {
 M:  {   
         $$ = statCreate();
         $$->nextlist = newList(giveNextInstr());
-        char *value = (char*)malloc(sizeof(char)*100);
-        sprintf(value, "%d", giveNextInstr());
-        emit(GOTO, "M", NULL, NULL);
+        emit(GOTO, "", NULL, NULL);
     }
     ;
 
@@ -130,11 +128,12 @@ primary_expression:
     | INTEGER_CONSTANT      {
                                 $$ = exprCreate();
                                 $$->loc = gentemp();
-                                char * value = (char*)malloc(sizeof(char)*100);
+                                char * value = (char*)malloc(sizeof(char)*10);
                                 sprintf(value, "%d", $1);
                                 $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_INT, value, size_of_int, TEMP, 0, NULL);
                                 $$->isBoolean = false;
                                 emit(ASSIGN, $$->loc->name, value, NULL);
+                                free(value);
                             }
     | CHARACTER_CONSTANT    {
                                 $$ = exprCreate();
@@ -144,6 +143,7 @@ primary_expression:
                                 $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_CHAR, value, size_of_char, TEMP, 0, NULL);
                                 $$->isBoolean = false;
                                 emit(ASSIGN, $$->loc->name, value, NULL);
+                                free(value);
                             }
     | STRING_LITERAL        {
                                 $$ = exprCreate();
@@ -152,7 +152,9 @@ primary_expression:
                                 value = strdup($1);
                                 $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_CHAR, value, size_of_char, TEMP, 0, NULL);
                                 $$->isBoolean = false;
-                                emit(ASSIGN, $$->loc->name, value, NULL);
+                                emit(STR, $$->loc->name, value, NULL);
+                                
+                                free(value);
                             }
     | '(' expression ')'    {
         
@@ -604,7 +606,7 @@ declarator:
                                             $$->size = size_of_pointer;
                                             if ($$->type != TYPE_VOID){
                                                 symbol *RV = symlook($$->nested_table, "retVal");
-                                                RV = update_symboltable($$->nested_table, RV->name, $$->type, 0, $$->size, LOCAL, 0, NULL);
+                                                RV = update_symboltable($$->nested_table, RV->name, $$->type, 0, $$->size, RETVAL, 0, NULL);
                                             }
                                         }
                                         else{
@@ -625,6 +627,7 @@ direct_declarator:
                                                             $$ = create_symbol();
                                                             data_type dType = pop(&dTypeStack);
                                                             if (current_table != global_table){
+                                                                printf("HERE %s %d\n", $1->name, dType.type);
                                                                 $1 = update_symboltable(current_table, $1->name, dType.type, 0, dType.size, LOCAL, 0, NULL);
                                                             }
                                                             else{
@@ -650,7 +653,7 @@ direct_declarator:
                                                             $1 = update_symboltable(global_table, $1->name, dType.type, 0, 0, FUNCTION, 0, NULL);
                                                             if (dType.type != TYPE_VOID){
                                                                 symbol *RV = symlook(current_table, "retVal");
-                                                                RV = update_symboltable(current_table, RV->name, $1->type, 0, dType.size, LOCAL, 0, NULL);
+                                                                RV = update_symboltable(current_table, RV->name, $1->type, 0, dType.size, RETVAL, 0, NULL);
                                                             }
                                                             $1->nested_table = current_table;
                                                             table_pointer = current_table;
@@ -804,6 +807,7 @@ iteration_statement:
                                                                                                 char *value = (char*)malloc(sizeof(char)*100);
                                                                                                 sprintf(value, "%d", $5);
                                                                                                 emit(GOTO, value, NULL, NULL);
+                                                                                                free(value);
                                                                                             }
                                                                                             else{
                                                                                                 intToBool($6);
@@ -814,6 +818,7 @@ iteration_statement:
                                                                                                 sprintf(value, "%d", $8);
                                                                                                 emit(GOTO, value, NULL, NULL);
                                                                                                 $$->nextlist = $6->falselist;
+                                                                                                free(value);
                                                                                             }
                                                                                         }    
     ;
