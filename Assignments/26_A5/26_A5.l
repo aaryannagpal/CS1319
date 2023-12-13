@@ -49,7 +49,8 @@ MULTI_LINE_COMMENT     (\/\*)([^\*]|\*[^\/])*(\*\/)
 
 COMMENT             ({MULTI_LINE_COMMENT})|({SINGLE_LINE_COMMENT})
 
-WHITESPACE  [ \s\t\n]
+WHITESPACE  [ \s\t]
+NEWLINE     [\n\r]
 
 %%
 {CHAR}      {return CHAR;}
@@ -92,6 +93,7 @@ WHITESPACE  [ \s\t\n]
 
 {COMMENT}               /* ignore comments */
 {WHITESPACE}            /* ignore whitespace */
+{NEWLINE}               {yylineno++;}
 .                       {return -1;}
 %%
 

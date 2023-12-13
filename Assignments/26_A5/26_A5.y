@@ -5,7 +5,8 @@
 
     extern int yylex();
 
-    void yyerror(char *s);
+    int yyerror(char *s);
+    extern int yylineno;
     extern char *yytext;
     extern char* string_table[MAX_STRING_TABLE];
     extern int string_count;
@@ -191,6 +192,7 @@ postfix_expression:
                                                                     }
                                                                     else{
                                                                         $$->loc = gentemp();
+                                                                        //printf("Type and Size: %d %d\n", $1->loc->type, $1->loc->size);
                                                                         $$->loc = update_symboltable(current_table, $$->loc->name, $1->loc->type, NULL, $1->loc->size, TEMP, 0, NULL);
                                                                         $$->loc->arrayName = $1->loc->name;
                                                                         sprintf(value, "%d", $3);
@@ -564,9 +566,6 @@ init_declarator:
                                                 }
                                                 update_symboltable(current_table, $1->name, $1->type, 0, $1->size, GLOBAL, $1->arraySize, NULL);
                                             }
-                                            else{
-                                                yyerror("Invalid type");
-                                            }
                                         }
                                         else{
                                         }
@@ -630,7 +629,7 @@ direct_declarator:
                                                             $$ = create_symbol();
                                                             data_type dType = pop(&dTypeStack);
                                                             if (current_table != global_table){
-                                                                printf("HERE %s %d\n", $1->name, dType.type);
+                                                                // printf("HERE %s %d\n", $1->name, dType.type);
                                                                 $1 = update_symboltable(current_table, $1->name, dType.type, 0, dType.size, LOCAL, 0, NULL);
                                                             }
                                                             else{
@@ -653,7 +652,7 @@ direct_declarator:
     | IDENTIFIER '('create_table parameter_list_opt')'  {   
                                                             table_name = strdup($1->name);
                                                             data_type dType = pop(&dTypeStack);
-                                                            $1 = update_symboltable(global_table, $1->name, dType.type, 0, 0, FUNCTION, 0, NULL);
+                                                            $1 = update_symboltable(global_table, $1->name, dType.type, 0, dType.size, FUNCTION, 0, NULL);
                                                             if (dType.type != TYPE_VOID){
                                                                 symbol *RV = symlook(current_table, "retVal");
                                                                 RV = update_symboltable(current_table, RV->name, $1->type, 0, dType.size, RETVAL, 0, NULL);
@@ -683,7 +682,6 @@ parameter_list:
 
 parameter_declaration:
     type_specifier pointer IDENTIFIER       {   
-
                                                 data_type dType = pop(&dTypeStack);
                                                 $3 = update_symboltable(current_table, $3->name, dType.type - TYPE_PTR, 0, size_of_pointer, PARAMETER, 0, NULL);
                                             }
@@ -873,6 +871,7 @@ function_definition:
 %%
 
 
-void yyerror(char *s) {
-    printf("Error: %s on '%s'", s, yytext);
+int yyerror(char *s) {
+    printf("Error: %s on '%s' at %d", s, yytext, yylineno);
+    exit(1);
 }
