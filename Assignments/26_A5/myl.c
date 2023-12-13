@@ -1,4 +1,4 @@
-#include "iolib.h"
+#include "myl.h"
 #include <unistd.h>
 #include <stdbool.h>
 
@@ -61,7 +61,7 @@ int readInt(int *error) {
         }
 
         if (buffer[index] < '0' || buffer[index] > '9') {
-            *error = ERROR;
+            *error = ERR;
             return 0;
         }
 
