@@ -17,11 +17,7 @@ compiler: 26_A5.y 26_A5_translator.c 26_A5.l
 
 build: compiler
 
-test: build
-	./$(EXECUTABLE) 1 26_A5.nc > test.out
-	./$(EXECUTABLE) 2 26_A5.nc > test.asm
-	as -o test.o test.asm
-	gcc -o test test.o
+test: compiler tac asm
 
 open: build
 	./$(EXECUTABLE) < 26_A5.nc
