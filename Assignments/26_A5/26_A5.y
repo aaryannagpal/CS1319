@@ -7,6 +7,8 @@
 
     void yyerror(char *s);
     extern char *yytext;
+    extern char* string_table[MAX_STRING_TABLE];
+    extern int string_count;
     
 %}
 
@@ -153,7 +155,8 @@ primary_expression:
                                 $$->loc = update_symboltable(current_table, $$->loc->name, TYPE_CHAR, value, size_of_char, TEMP, 0, NULL);
                                 $$->isBoolean = false;
                                 emit(STR, $$->loc->name, value, NULL);
-                                
+                                string_table[string_count] = strdup($1);
+                                string_count++;
                                 free(value);
                             }
     | '(' expression ')'    {
