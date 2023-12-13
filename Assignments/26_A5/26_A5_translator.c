@@ -38,6 +38,7 @@ symbol *create_symboltable(){
 
 symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value, int size, enumcat category, int arraySize, char *arrayName){
     symbol *temp = table;    
+    // printf("Updating symbol table: %s\n", name);
     while(temp != NULL){
         if(strcmp(temp->name, name) == 0){
             temp->type = type;
@@ -71,6 +72,7 @@ symbol *update_symboltable(symbol *table, char *name, enumtype type, char *value
         }
         temp = temp->next;
     }
+    free(temp);
     return NULL;
 }
 
@@ -97,6 +99,7 @@ symbol *searchTable(symbol *table, char *name){
     if (strcmp(temp->name, name) == 0){
         return temp;
     }
+    free(temp);
     return NULL;
 }
 
@@ -134,6 +137,7 @@ symbol *symlook(symbol *table, char *name){
     if (strcmp(temp->name, name) == 0){
         return temp;
     }
+    
     symbol *new = (symbol *)malloc(sizeof(symbol));
     new->name = strdup(name);
     new->type = 0;
@@ -281,6 +285,9 @@ void print_symboltable(symbol *table){
             case TEMP:
                 printf("TMP\t\t");
                 break;
+            case RETVAL:
+                printf("RET\t\t");
+                break;
             default:
                 if (table == global_table){
                     printf("GLB\t\t");
@@ -300,6 +307,7 @@ void print_symboltable(symbol *table){
         sym = sym->next;
     }
     printf("\n\n");
+    // free(sym);
 }
 
 void print_all_ST(){
@@ -314,6 +322,7 @@ void print_all_ST(){
         }
         sym = sym->next;
     }
+    // free(sym);
 }
 
 symbol *gentemp(){//data_type type, void *value){
@@ -330,6 +339,10 @@ symbol *global_table = NULL;
 symbol *current_table = NULL;
 symbol *table_pointer = NULL;
 char *table_name = NULL;
+int labelCount = 0;
+labelHash *labelTable[MAX_LABELS];
+globVars *globalVars[MAX_GLOBAL_VARS];
+
 
 
 // QuadArray *quadArray;
@@ -395,6 +408,9 @@ void makeTAC(){
             case ASSIGN:
                 printf("%s = %s\n", QuadArray[i]->result, QuadArray[i]->arg1);
                 break;
+            case STR:
+                printf("%s = %s\n", QuadArray[i]->result, QuadArray[i]->arg1);
+                break;
             case PLUS:
                 printf("%s = %s + %s\n", QuadArray[i]->result, QuadArray[i]->arg1, QuadArray[i]->arg2);
                 break;
@@ -428,7 +444,6 @@ void makeTAC(){
             case LTE:
                 printf("if %s <= %s goto %s\n", QuadArray[i]->arg1, QuadArray[i]->arg2, QuadArray[i]->result);
                 break;
-
             case ADDR:
                 printf("%s = &%s\n", QuadArray[i]->result, QuadArray[i]->arg1);
                 break;
@@ -644,6 +659,252 @@ List *merge(List *list1, List *list2) {
     }
 }
 
+
+param_list* para_init(){
+    param_list *new = (param_list *)malloc(sizeof(param_list));
+    new->para = NULL;
+    new->next = NULL;
+    return new;
+}
+
+void para_push(param_list *head, char *para){
+    if (head->para == NULL){
+        head->para = strdup(para);
+        return;
+    }
+    param_list *temp = (param_list *)malloc(sizeof(param_list));
+    temp->para = strdup(para);
+    temp->next = NULL;
+
+    param_list *current = head;
+    while(current->next != NULL){
+        current = current->next;
+    }
+    current->next = temp;
+}
+
+param_list* para_pop(param_list *head){
+    param_list *temp = head;
+    if (temp->next == NULL){
+        param_list *new = temp;
+        temp = temp->next;
+        free(temp);
+    }
+    head = para_init();
+    return head;
+}
+
+unsigned int ARhash(char *str){
+    unsigned int hash = 0;
+    for (int i = 0; i < strlen(str); i++){
+        hash = hash + str[i];
+    }
+    return hash % MAX_AR_SIZE;
+}
+
+void insertAR(ARHash *table[], char *key, int value){
+    if (key == NULL){
+        return;
+    }
+    int hash = ARhash(key);
+    ARHash *temp = table[hash];
+    while (temp != NULL){
+        if (strcmp(temp->key, key) == 0){
+            temp->value = value;
+            return;
+        }
+        temp = temp->next;
+    }
+    ARHash *new = (ARHash *)malloc(sizeof(ARHash));
+    new->key = strdup(key);
+    new->value = value;
+    new->next = table[hash];
+    table[hash] = new;
+}
+
+int searchAR(ARHash *table[], char *key){
+    if (key == NULL){
+        return -1;
+    }
+    int hash = ARhash(key);
+    ARHash *temp = table[hash];
+    while (temp != NULL){
+        if (strcmp(temp->key, key) == 0){
+            return temp->value;
+        }
+        temp = temp->next;
+    }
+    return -1;
+}
+
+unsigned int labHash(int key){
+    return key % MAX_LABELS;
+}
+
+void insertLabel(labelHash *table[], int key, int value){
+    if (key == -1){
+        return;
+    }
+
+    int hash = labHash(key);
+    labelHash *temp = table[hash];
+    while (temp != NULL){
+        if (temp->key == key){
+            temp->value = value;
+            return;
+        }
+        temp = temp->next;
+    }
+    labelHash *new = (labelHash *)malloc(sizeof(labelHash));
+    new->key = key;
+    new->value = value;
+    new->next = table[hash];
+    table[hash] = new;
+}
+
+bool searchLabel(labelHash *table[], int key){
+    if (key == -1){
+        return false;
+    }
+
+    int hash = labHash(key);
+    labelHash *temp = table[hash];
+    while (temp != NULL){
+        if (temp->key == key){
+            return true;
+        }
+        temp = temp->next;
+    }
+    return false;
+}
+
+labelHash* getLabel(labelHash *table[], int key){
+    if (key == -1){
+        return NULL;
+    }
+
+    int hash = labHash(key);
+    labelHash *temp = table[hash];
+    while (temp != NULL){
+        if (temp->key == key){
+            return temp;
+        }
+        temp = temp->next;
+    }
+    return NULL;
+}
+
+unsigned int globHash(char *str){
+    unsigned int hash = 0;
+    for (int i = 0; i < strlen(str); i++){
+        hash = hash + str[i];
+    }
+    return hash % MAX_GLOBAL_VARS;
+}
+
+void insertGlob(globVars *table[], char *key, bool value){
+    if (key == NULL){
+        return;
+    }
+    int hash = globHash(key);
+    globVars *temp = table[hash];
+    while (temp != NULL){
+        if (strcmp(temp->name, key) == 0){
+            temp->value = value;
+            return;
+        }
+        temp = temp->next;
+    }
+    globVars *new = (globVars *)malloc(sizeof(globVars));
+    new->name = strdup(key);
+    new->value = value;
+    new->next = table[hash];
+    table[hash] = new;
+}
+
+bool searchGlob(globVars *table[], char *key){
+    if (key == NULL){
+        return false;
+    }
+    int hash = globHash(key);
+    globVars *temp = table[hash];
+    while (temp != NULL){
+        if (strcmp(temp->name, key) == 0){
+            return temp->value;
+        }
+        temp = temp->next;
+    }
+    return false;
+}
+
+void AR(symbol *table){
+    int localOffset = -4;
+    int paramOffset = 8;
+
+    symbol *temp = table;
+    while (temp->next != NULL){
+        if (temp->category == RETVAL){
+            temp = temp->next;
+            continue;
+        }
+        else if (temp->category == PARAMETER){
+            insertAR(temp->ST_AR, temp->name, paramOffset);
+            printf("Inserting %s at %d for %s\n", temp->ST_AR[ARhash(temp->name)]->key, temp->ST_AR[ARhash(temp->name)]->value, temp->name);
+            paramOffset += temp->size;
+        }
+        else if (temp->category == FUNCTION){
+            AR(temp->nested_table);
+        }
+        else{
+            insertAR(temp->ST_AR, temp->name, localOffset);
+            printf("Inserting %s at %d for %s\n", temp->ST_AR[ARhash(temp->name)]->key, temp->ST_AR[ARhash(temp->name)]->value, temp->name);
+            localOffset -= temp->size;
+        }
+        temp = temp->next;
+    }
+
+    if (temp->category == RETVAL){
+        return;
+    }
+    else if (temp->category == PARAMETER){
+        insertAR(temp->ST_AR, temp->name, paramOffset);
+        printf("Inserting %s at %d for %s\n", temp->ST_AR[ARhash(temp->name)]->key, temp->ST_AR[ARhash(temp->name)]->value, temp->name);
+
+        paramOffset += temp->size;
+    }
+    else if (temp->category == FUNCTION){
+        AR(temp->nested_table);
+    }
+    else{
+        insertAR(temp->ST_AR, temp->name, localOffset);
+        printf("Inserting %s at %d for %s\n", temp->ST_AR[ARhash(temp->name)]->key, temp->ST_AR[ARhash(temp->name)]->value, temp->name);
+
+        localOffset -= temp->size;
+    }
+    return;
+}
+
+void printAR(symbol *table){
+    printf("\n\n");
+    printf("====================================================================");
+    printf("\n\n");
+    symbol *sym = table;
+
+    while (sym != NULL){  
+        if (sym->category == FUNCTION){
+            printAR(sym->nested_table);
+        }  
+        for (int i = 0; i < MAX_AR_SIZE; i++){
+            ARHash *temp = sym->ST_AR[i];
+            if (temp != NULL){
+                printf("%s\t\t%d\n", temp->key, temp->value);
+            }
+        }
+        sym = sym->next;
+    }
+    return;
+}
+
 int main(){
 
     global_table = create_symboltable();
@@ -652,11 +913,12 @@ int main(){
     next_instr = 1;
 
     yyparse();
-
     print_all_ST();
-    // print_quad_array();
+    printf("Next Instruction Number: %d\n\n", next_instr);
+    print_quad_array();
     makeTAC();
-    printf("Next Instruction Number: %d", next_instr);
+    AR(global_table);
+    printAR(global_table);
 
     return 0;
 }
